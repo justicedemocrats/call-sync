@@ -6,7 +6,7 @@ defmodule CallSync do
 
     children = [
       supervisor(CallSync.Endpoint, []),
-      worker(CallSync.AirtableCache, []),
+      worker(CallSync.AirtableCache, [])
     ]
 
     opts = [strategy: :one_for_one, name: CallSync.Supervisor]

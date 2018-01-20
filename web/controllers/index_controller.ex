@@ -12,7 +12,7 @@ defmodule CallSync.IndexController do
 
   def question_lookup(conn, ~m(slug)) do
     resp =
-      case AirtableCache.get_all()[slug] do
+      case AirtableCache.get_all().listings[slug] do
         ~m(api_key reference_name) ->
           questions = Van.get_questions(api_key)
 
@@ -65,4 +65,32 @@ defmodule CallSync.IndexController do
 
     text conn, resp
   end
+
+  def verify(conn, ~m(slug)) do
+    resp =
+      case AirtableCache.get_all().listings[slug] do
+        ~m(api_key reference_name) ->
+          configuration = AirtableCache.get_all().configurations[slug]
+          questions = Van.get_questions(api_key)
+          ~s(still working on it)
+
+      _no_match ->
+        options =
+          AirtableCache.get_all()
+          |> Enum.map(fn {slug, _} -> slug end)
+          |> Enum.join(", ")
+
+        ~s(that was an invalid integration reference name – try one of #{options})
+      end
+
+    text conn, resp
+  end
+
+  # def verify_result(result, configuration, questions) do
+  #   case configuration[result] do
+  #     [] -> {:error, "missing at least a QR1 for #{result}"}
+  #     questions ->
+  #       Enum.map()
+  #   end
+  # end
 end
