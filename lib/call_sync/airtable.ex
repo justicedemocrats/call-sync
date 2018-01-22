@@ -1,6 +1,7 @@
 defmodule CallSync.AirtableCache do
   use Agent
   require Logger
+  import ShortMaps
 
   @interval 1_000_000
 
@@ -33,7 +34,7 @@ defmodule CallSync.AirtableCache do
     listings = root_table() |> fetch_all() |> process_integration_listings()
 
     configurations =
-      Enum.map(integration_listings, fn ~m(reference_name slug) ->
+      Enum.map(listings, fn {slug, ~m(reference_name)} ->
         config = reference_name |> fetch_all() |> process_configuration()
         {slug, config}
       end)
@@ -44,15 +45,15 @@ defmodule CallSync.AirtableCache do
 
   defp fetch_all(for_table) do
     %{body: body} =
-      HTTPotion.get("https://api.airtable.com/v0/#{base}/#{for_table}", headers: [
+      HTTPotion.get("https://api.airtable.com/v0/#{base}/#{URI.encode(for_table)}", headers: [
         Authorization: "Bearer #{key}"
       ])
 
     decoded = Poison.decode!(body)
 
     if Map.has_key?(decoded, "offset"),
-      do: fetch_all(decoded["records"], decoded["offset"]),
-      else: records
+      do: fetch_all(for_table, decoded["records"], decoded["offset"]),
+      else: decoded["records"]
   end
 
   defp fetch_all(for_table, records, offset) do
@@ -70,7 +71,7 @@ defmodule CallSync.AirtableCache do
     all_records = Enum.concat(records, new_records)
 
     if Map.has_key?(decoded, "offset"),
-      do: fetch_all(all_records, decoded["offset"]),
+      do: fetch_all(for_table, all_records, decoded["offset"]),
       else: all_records
   end
 
@@ -95,11 +96,11 @@ defmodule CallSync.AirtableCache do
 
   defp process_configuration(records) do
     records
-    |> Enum.map(fn ->
+    |> Enum.map(fn ~m(fields) ->
          {
-           fields["VAN Result"],
+           fields["Full On Screen Result"],
            fields
-           |> Map.drop(["VAN Result"])
+           |> Map.drop(["Full On Screen Result"])
            |> Enum.map(fn {_qnum, val} -> val end)
            |> Enum.map(fn qr_pair -> String.split(qr_pair) |> Enum.map(&String.trim/1) end)
          }

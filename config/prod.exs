@@ -38,3 +38,6 @@ config :call_sync,
   airtable_base: "${AIRTABLE_BASE}",
   airtable_table_name: "${AIRTABLE_TABLE_NAME}",
   secret: "${UPDATE_SECRET}"
+
+config :call_sync,
+  application_name: "${VAN_APP_NAME}"

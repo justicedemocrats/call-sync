@@ -10,11 +10,15 @@ defmodule CallSync.IndexController do
     )
   end
 
-  def question_lookup(conn, ~m(slug)) do
+  def configure_lookup(conn, ~m(slug)) do
     resp =
       case AirtableCache.get_all().listings[slug] do
         ~m(api_key reference_name) ->
-          questions = Van.get_questions(api_key)
+          [questions, tags, status_codes] = Enum.map([
+              Task.async(fn -> Van.get_questions(api_key) end),
+              Task.async(fn -> Van.get_tags(api_key) end),
+              Task.async(fn -> Van.get_status_codes(api_key) end)
+            ], &Task.await/1)
 
           question_strings =
             questions
@@ -35,22 +39,62 @@ defmodule CallSync.IndexController do
           first_question = List.first(questions)
           first_response = List.first(first_question["responses"])
 
-          ~s[
-            please paste pairs of question_id,response in QR 1 (and 2, 3, if desired)
-            in the tag in Airtable corresponding to #{reference_name}
+          tag_strings =
+            tags
+            |> Enum.map(fn tag = ~m(name description) ->
+              ~s[
+                #{name}(#{description}) -> #{Help.extract_id(tag)}
+              ]
+            end)
 
-            for example, a correctly formatted row could be:
+          status_codes_strings =
+            status_codes
+            |> Enum.map(fn ~m(resultCodeId name) ->
+              ~s[
+                #{name} -> #{resultCodeId}
+              ]
+            end)
+
+          ~s[
+            hello!
+
+            in order to configure the sync for #{reference_name}, you'll need to
+            add a canvass result code, some activist codes / tags, and/or some
+            question and response pairs.
+
+            to add a canvas result code, simply paste it into the box. you can only have one.
+
+            to add some activist codes, paste them into the box.
+            They should be comma separated. Please do not have trailing commas.
+
+            to add some question response pairs, paste question,response in QR 1,
+            and add a QR 2, 3, ... QR N if necessary.
+
+            for example, a correctly formatted QR pair could be:
               1 - strong support -> #{Help.extract_id(first_question)},#{first_response["key"]}
 
             this would mean that strong support should be recorded as the first response
             to the first question
 
-            if you add additional columns (which must be called QR 2, QR 3, ...)
-            then you can trigger multiple responses for one result in livevox
+            i have included data below for you to copy and paste ids from.
+            let me know if you have any questions
 
-            only QR 1 is required for every field
+            #####################################################
+            ################ CANVAS RESULT CODES ################
+            #####################################################
 
-            here are the questions and their answers.\n\n
+            #{status_codes_strings}
+
+            #####################################################
+            ############### TAGS / ACTIVIST CODES ###############
+            #####################################################
+
+            #{tag_strings}
+
+            #####################################################
+            ############## QUESTIONS AND RESPONSES ##############
+            #####################################################
+
             #{question_strings}
           ]
 
@@ -61,6 +105,25 @@ defmodule CallSync.IndexController do
           |> Enum.join(", ")
 
         ~s(that was an invalid integration reference name – try one of #{options})
+      end
+
+    text conn, resp
+  end
+
+  def tag_lookup(conn, ~m(slug)) do
+    resp =
+      case AirtableCache.get_all().listings[slug] do
+        ~m(api_key reference_name) ->
+          tags = Van.get_tags(api_key)
+          Poison.encode!(tags)
+
+        _no_match ->
+          options =
+            AirtableCache.get_all()
+            |> Enum.map(fn {slug, _} -> slug end)
+            |> Enum.join(", ")
+
+          ~s(that was an invalid integration reference name – try one of #{options})
       end
 
     text conn, resp

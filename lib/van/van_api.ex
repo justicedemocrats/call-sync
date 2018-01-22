@@ -1,22 +1,28 @@
-defmodule Van.Api do
+defmodule Van.Van.Api do
   use HTTPoison.Base
   import ShortMaps
 
+  def application_name, do: Application.get_env(:call_sync, :application_name)
+
   # --------------- Process request ---------------
   defp process_url(url) do
-    "https://osdi.ngpvan.com/api/v1/#{url}"
+    "https://api.securevan.com/v4/#{url}"
   end
 
   defp process_request_headers(hdrs) do
-    api_key = Keyword.get(hdrs, :api_key)
-
     hdrs
-    |> Keyword.delete(:api_key)
     |> Enum.into(
          Accept: "application/json",
-         "Content-Type": "application/json",
-         "OSDI-API-Token": "#{api_key}|0"
+         "Content-Type": "application/json"
        )
+  end
+
+  defp process_request_options(opts) do
+    api_key = Keyword.get(opts, :api_key)
+
+    opts
+    |> Keyword.delete(:api_key)
+    |> Keyword.put(:hackney, [basic_auth: {application_name(), "#{api_key}|0"}])
     |> IO.inspect()
   end
 
@@ -52,7 +58,12 @@ defmodule Van.Api do
 
   def enclose_unfolder(url, opts) do
     fn %{"total_pages" => tps, "page" => p, "_embedded" => docs} ->
-      case docs["osdi:questions"] do
+      key_name =
+        Map.keys(docs)
+        |> Enum.filter(& String.contains?(&1, "osdi:"))
+        |> List.first()
+
+      case docs[key_name] do
         [] ->
           if p == tps do
             nil

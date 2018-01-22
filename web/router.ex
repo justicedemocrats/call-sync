@@ -9,7 +9,7 @@ defmodule CallSync.Router do
     pipe_through :main
 
     get("/", IndexController, :index)
-    get("/configure/:slug", IndexController, :question_lookup)
+    get("/configure/:slug", IndexController, :configure_lookup)
     get("/verify/:slug", IndexController, :verify)
   end
 end
