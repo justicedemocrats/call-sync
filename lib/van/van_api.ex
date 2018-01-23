@@ -23,7 +23,6 @@ defmodule Van.Van.Api do
     opts
     |> Keyword.delete(:api_key)
     |> Keyword.put(:hackney, basic_auth: {application_name(), "#{api_key}|0"})
-    |> IO.inspect()
   end
 
   defp process_request_body(body) when is_map(body) do

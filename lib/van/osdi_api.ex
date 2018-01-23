@@ -50,7 +50,7 @@ defmodule Van.Osdi.Api do
   end
 
   def enclose_unfolder(url, opts) do
-    fn %{"total_pages" => tps, "page" => p, "_embedded" => docs} ->
+    fn result = %{"total_pages" => tps, "page" => p, "_embedded" => docs} ->
       key_name =
         Map.keys(docs)
         |> Enum.filter(&String.contains?(&1, "osdi:"))
@@ -61,8 +61,9 @@ defmodule Van.Osdi.Api do
           if p == tps do
             nil
           else
-            next_opts = Keyword.update(opts, :query, %{}, &Map.put(&1, "page", p + 1))
-            %{body: body = %{"_embedded" => [first | rest]}} = get!(url, next_opts).body
+            headers = opts
+            params = %{"page" => p + 1}
+            %{body: body = %{"_embedded" => %{"osdi:questions" => [first | rest]}}} = get!(url, headers, params: params)
             {first, Map.put(body, "_embedded", %{"osdi:questions" => rest})}
           end
 
