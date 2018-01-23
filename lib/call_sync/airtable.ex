@@ -121,5 +121,6 @@ defmodule CallSync.AirtableCache do
     reference_name
     |> String.downcase()
     |> String.replace(" ", "-")
+    |> String.replace("''", "")
   end
 end
