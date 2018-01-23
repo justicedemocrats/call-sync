@@ -52,5 +52,4 @@ config :call_sync,
   airtable_table_name: System.get_env("AIRTABLE_TABLE_NAME"),
   secret: "secret"
 
-config :call_sync,
-  application_name: System.get_env("VAN_APP_NAME")
+config :call_sync, application_name: System.get_env("VAN_APP_NAME")

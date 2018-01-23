@@ -97,13 +97,22 @@ defmodule CallSync.AirtableCache do
   defp process_configuration(records) do
     records
     |> Enum.map(fn ~m(fields) ->
-         {
-           fields["Full On Screen Result"],
-           fields
-           |> Map.drop(["Full On Screen Result"])
+         success = fields["Success"]
+         result_code = fields["Canvass Result Code"]
+         tags = fields["Tags"]
+
+         qrs_left =
+           Map.drop(fields, ["Full On Screen Result", "Tags", "Success", "Canvass Result Code", "Used?"])
+
+         qr_pairs =
+           qrs_left
            |> Enum.map(fn {_qnum, val} -> val end)
-           |> Enum.map(fn qr_pair -> String.split(qr_pair) |> Enum.map(&String.trim/1) end)
-         }
+           |> Enum.map(fn qr_pair ->
+                [q, r] = String.split(qr_pair, ",") |> Enum.map(&String.trim/1)
+                {q, r}
+              end)
+
+         {String.downcase(fields["Full On Screen Result"]), ~m(success result_code tags qrs_left)}
        end)
     |> Enum.into(%{})
   end

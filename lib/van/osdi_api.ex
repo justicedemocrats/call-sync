@@ -53,7 +53,7 @@ defmodule Van.Osdi.Api do
     fn %{"total_pages" => tps, "page" => p, "_embedded" => docs} ->
       key_name =
         Map.keys(docs)
-        |> Enum.filter(& String.contains?(&1, "osdi:"))
+        |> Enum.filter(&String.contains?(&1, "osdi:"))
         |> List.first()
 
       case docs[key_name] do

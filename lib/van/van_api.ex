@@ -22,7 +22,7 @@ defmodule Van.Van.Api do
 
     opts
     |> Keyword.delete(:api_key)
-    |> Keyword.put(:hackney, [basic_auth: {application_name(), "#{api_key}|0"}])
+    |> Keyword.put(:hackney, basic_auth: {application_name(), "#{api_key}|0"})
     |> IO.inspect()
   end
 
@@ -60,7 +60,7 @@ defmodule Van.Van.Api do
     fn %{"total_pages" => tps, "page" => p, "_embedded" => docs} ->
       key_name =
         Map.keys(docs)
-        |> Enum.filter(& String.contains?(&1, "osdi:"))
+        |> Enum.filter(&String.contains?(&1, "osdi:"))
         |> List.first()
 
       case docs[key_name] do
