@@ -2,9 +2,9 @@ defmodule Livevox.Session do
   use Agent
   defstruct [:id, :expires_at]
 
-  def clientname, do: Application.get_env(:livevox, :clientname)
-  def username, do: Application.get_env(:livevox, :username)
-  def password, do: Application.get_env(:livevox, :password)
+  def clientname, do: Application.get_env(:livevox, :clientname) |> IO.inspect()
+  def username, do: Application.get_env(:livevox, :username) |> IO.inspect()
+  def password, do: Application.get_env(:livevox, :password) |> IO.inspect()
 
   # State takes the format index
   def start_link do
