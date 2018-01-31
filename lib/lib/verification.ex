@@ -40,6 +40,10 @@ defmodule CallSync.Verification do
     end
   end
 
+  def verify_component("display_name", val, _) do
+    {:ok, ~s(Display name is "#{val}")}
+  end
+
   def verify_component("result_code", nil, _) do
     {:ok, "No result code added"}
   end
