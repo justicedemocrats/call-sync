@@ -13,4 +13,11 @@ defmodule Van do
     {:ok, %{body: body}} = Van.Van.Api.get("canvassResponses/resultCodes", [], api_key: api_key)
     body
   end
+
+  def record_canvass(voter_id, canvass, api_key) do
+    {:ok, %{body: body}} =
+      Van.Osdi.Api.post("people/#{voter_id}/record_canvass_helper", canvass, [], api_key: api_key)
+
+    body
+  end
 end

@@ -10,6 +10,6 @@ defmodule CallSync.Router do
 
     get("/", IndexController, :index)
     get("/configure/:slug", IndexController, :configure_lookup)
-    get("/verify/:slug", IndexController, :verify)
+    get("/validate/:slug", IndexController, :validate)
   end
 end

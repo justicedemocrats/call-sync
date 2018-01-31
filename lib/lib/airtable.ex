@@ -19,9 +19,13 @@ defmodule CallSync.AirtableCache do
   end
 
   def update() do
-    Agent.update(__MODULE__, fn _current ->
-      update_all()
-    end)
+    Agent.update(
+      __MODULE__,
+      fn _current ->
+        update_all()
+      end,
+      20_000
+    )
 
     Logger.info("[call sync configuration]: updated at #{inspect(DateTime.utc_now())}")
   end
@@ -45,9 +49,13 @@ defmodule CallSync.AirtableCache do
 
   defp fetch_all(for_table) do
     %{body: body} =
-      HTTPotion.get("https://api.airtable.com/v0/#{base}/#{URI.encode(for_table)}", headers: [
-        Authorization: "Bearer #{key}"
-      ])
+      HTTPotion.get(
+        "https://api.airtable.com/v0/#{base}/#{URI.encode(for_table)}",
+        headers: [
+          Authorization: "Bearer #{key}"
+        ],
+        timeout: :infinity
+      )
 
     decoded = Poison.decode!(body)
 
@@ -63,7 +71,8 @@ defmodule CallSync.AirtableCache do
         headers: [
           Authorization: "Bearer #{key}"
         ],
-        query: [offset: offset]
+        query: [offset: offset],
+        timeout: :infinity
       )
 
     decoded = Poison.decode!(body)
@@ -79,41 +88,57 @@ defmodule CallSync.AirtableCache do
     records
     |> Enum.filter(fn ~m(fields) -> Map.has_key?(fields, "API Key") end)
     |> Enum.map(fn ~m(fields) ->
-         {
-           slugify(fields["Reference Name"]),
-           %{
-             "service_ids" => String.split(fields["Service Ids"]),
-             "system" => fields["System"],
-             "api_key" => fields["API Key"],
-             "tag_ids" => fields["Tag Ids"],
-             "sync_frequency" => fields["Sync Frequency"],
-             "reference_name" => fields["Reference Name"]
-           }
-         }
-       end)
+      {
+        slugify(fields["Reference Name"]),
+        %{
+          "service_ids" => String.split(fields["Service Ids"]),
+          "system" => fields["System"],
+          "api_key" => fields["API Key"],
+          "tag_ids" => fields["Tag Ids"],
+          "sync_frequency" => fields["Sync Frequency"],
+          "reference_name" => fields["Reference Name"]
+        }
+      }
+    end)
     |> Enum.into(%{})
   end
 
   defp process_configuration(records) do
     records
     |> Enum.map(fn ~m(fields) ->
-         success = fields["Success"]
-         result_code = fields["Canvass Result Code"]
-         tags = fields["Tags"]
+      success = fields["Success"] == true
+      result_code = fields["Canvass Result Code"]
+      should_sync = fields["Should Sync"]
 
-         qrs_left =
-           Map.drop(fields, ["Full On Screen Result", "Tags", "Success", "Canvass Result Code", "Used?"])
+      tags =
+        case fields["Tags"] do
+          nil -> []
+          "" -> []
+          string -> String.split(string, ",")
+        end
 
-         qr_pairs =
-           qrs_left
-           |> Enum.map(fn {_qnum, val} -> val end)
-           |> Enum.map(fn qr_pair ->
-                [q, r] = String.split(qr_pair, ",") |> Enum.map(&String.trim/1)
-                {q, r}
-              end)
+      qrs_left =
+        Map.drop(fields, [
+          "Full On Screen Result",
+          "Tags",
+          "Success",
+          "Canvass Result Code",
+          "Used?",
+          "Should Sync"
+        ])
 
-         {String.downcase(fields["Full On Screen Result"]), ~m(success result_code tags qrs_left)}
-       end)
+      qr_pairs =
+        qrs_left
+        |> Enum.map(fn {_qnum, val} -> val end)
+        |> Enum.map(fn qr_pair ->
+          [q, r] = String.split(qr_pair, ",") |> Enum.map(&String.trim/1)
+          {q, r}
+        end)
+
+      {String.downcase(fields["Full On Screen Result"]), ~m(success result_code tags qr_pairs should_sync)}
+    end)
+    |> Enum.filter(fn {_, ~m(should_sync)} -> should_sync end)
+    |> Enum.map(fn {key, map} -> {key, Map.drop(map, ~w(should_sync))} end)
     |> Enum.into(%{})
   end
 

@@ -110,13 +110,45 @@ defmodule CallSync.IndexController do
     text conn, resp
   end
 
-  def verify(conn, ~m(slug)) do
+  def validate(conn, ~m(slug)) do
     resp =
       case AirtableCache.get_all().listings[slug] do
         ~m(api_key reference_name) ->
           configuration = AirtableCache.get_all().configurations[slug]
           result = CallSync.Verification.verify(configuration, api_key)
-          Poison.encode!(result)
+
+          header_message =
+            case result
+              |> Enum.flat_map(& &1)
+              |> Enum.filter(&match?({:error, _}, &1))
+              |> length() do
+                0 -> "This sync is good to go!"
+                _ -> "THIS SYNC HAS ERRORS!!!!"
+            end
+
+          row_results = Enum.zip(configuration, result)
+          contents = Enum.map(row_results, fn {{full_on_screen, _}, validity} ->
+            row_contents = Enum.map(validity, fn
+              {:ok, msg} -> ~s(
+                #{msg}
+              )
+              {:error, msg} -> ~s(
+                !!!ERROR!!!: #{msg}
+              )
+            end) |> Enum.join("")
+
+            ~s(
+              #{full_on_screen} ---->>>>
+
+              #{row_contents}
+            )
+          end)
+
+          ~s(
+            #{header_message}
+
+            #{contents}
+          )
 
       _no_match ->
         options =

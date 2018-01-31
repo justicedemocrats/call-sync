@@ -13,10 +13,10 @@ defmodule Van.Osdi.Api do
     hdrs
     |> Keyword.delete(:api_key)
     |> Enum.into(
-         Accept: "application/json",
-         "Content-Type": "application/json",
-         "OSDI-API-Token": "#{api_key}|0"
-       )
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "OSDI-API-Token": "#{api_key}|0"
+    )
   end
 
   defp process_request_body(body) when is_map(body) do
@@ -45,8 +45,8 @@ defmodule Van.Osdi.Api do
 
     body
     |> Stream.unfold(fn iter ->
-         unfolder.(iter)
-       end)
+      unfolder.(iter)
+    end)
   end
 
   def enclose_unfolder(url, opts) do
@@ -63,7 +63,10 @@ defmodule Van.Osdi.Api do
           else
             headers = opts
             params = %{"page" => p + 1}
-            %{body: body = %{"_embedded" => %{"osdi:questions" => [first | rest]}}} = get!(url, headers, params: params)
+
+            %{body: body = %{"_embedded" => %{"osdi:questions" => [first | rest]}}} =
+              get!(url, headers, params: params)
+
             {first, Map.put(body, "_embedded", %{"osdi:questions" => rest})}
           end
 

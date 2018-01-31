@@ -12,9 +12,9 @@ defmodule Van.Van.Api do
   defp process_request_headers(hdrs) do
     hdrs
     |> Enum.into(
-         Accept: "application/json",
-         "Content-Type": "application/json"
-       )
+      Accept: "application/json",
+      "Content-Type": "application/json"
+    )
   end
 
   defp process_request_options(opts) do
@@ -51,8 +51,8 @@ defmodule Van.Van.Api do
 
     body
     |> Stream.unfold(fn iter ->
-         unfolder.(iter |> IO.inspect())
-       end)
+      unfolder.(iter |> IO.inspect())
+    end)
   end
 
   def enclose_unfolder(url, opts) do

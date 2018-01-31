@@ -39,11 +39,11 @@ defmodule CallSync.Mixfile do
       {:quantum, ">= 2.2.1"},
       {:flow, "~> 0.11"},
       {:short_maps, "~> 0.1.2"},
-      {:httpotion, "~> 3.0.3"},
       {:poison, "~> 3.1"},
       {:timex, "~> 3.1"},
       {:distillery, "~> 1.0.0"},
-      {:httpoison, "~> 1.0"}
+      {:httpoison, "~> 1.0"},
+      {:httpotion, "~> 3.0.3"}
     ]
   end
 end

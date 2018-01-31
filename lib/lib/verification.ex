@@ -15,34 +15,39 @@ defmodule CallSync.Verification do
     data = ~m(questions tags status_codes)
 
     configuration
-    |> Flow.from_enumerable()
-    |> Flow.map(fn {result, components} ->
-         Flow.from_enumerable(components)
-         |> Flow.flat_map(fn {type, value} ->
-              verified = verify_component(type, value, data)
+    # |> Flow.from_enumerable()
+    |> Enum.map(fn {_result, components} ->
+      Flow.from_enumerable(components)
+      |> Enum.flat_map(fn {type, value} ->
+        verified = verify_component(type, value, data)
 
-              if is_list(verified) do
-                verified
-              else
-                [verified]
-              end
-            end)
-         |> Enum.to_list()
-       end)
+        if is_list(verified) do
+          verified
+        else
+          [verified]
+        end
+      end)
+      |> Enum.to_list()
+    end)
+    |> Enum.to_list()
   end
 
   def verify_component("success", val, _) do
     if is_boolean(val) do
       {:ok, "Success: #{val}"}
     else
-      {:error, "#{val} is not true or false"}
+      {:error, "For success: #{val} is not true or false"}
     end
+  end
+
+  def verify_component("result_code", nil, _) do
+    {:ok, "No result code added"}
   end
 
   def verify_component("result_code", val, ~m(status_codes)) do
     match =
       status_codes
-      |> Enum.filter(&(&1["resultCodeId"] == val))
+      |> Enum.filter(&("#{&1["resultCodeId"]}" == "#{val}"))
       |> List.first()
 
     case match do
@@ -54,9 +59,7 @@ defmodule CallSync.Verification do
   def verify_component("tags", vals, ~m(tags)) do
     Enum.map(vals, fn id ->
       match =
-        Enum.filter(tags, fn t ->
-          Help.extract_id(t) == id
-        end)
+        Enum.filter(tags, fn t -> Help.extract_id(t) == id end)
         |> List.first()
 
       case match do
@@ -66,26 +69,40 @@ defmodule CallSync.Verification do
     end)
   end
 
-  def verify_component("qr_pairs", ~m(questions)) do
-    Enum.map(questions, fn {q, r} ->
-      q_match = Enum.filter(questions, fn question -> Help.extract_id(question) == q end)
+  def verify_component("qr_pairs", [], _) do
+    {:ok, "No questions"}
+  end
+
+  def verify_component("qr_pairs", vals, ~m(questions)) do
+    Enum.map(vals, fn {q, r} ->
+      q_match =
+        Enum.filter(questions, fn question -> Help.extract_id(question) == q end)
+        |> List.first()
 
       case q_match do
         nil ->
           {:error, "Could not find question with id: #{q}"}
 
+
         ~m(description responses) ->
           r_match =
             Enum.filter(responses, fn ~m(key) ->
-              key == r
+              "#{key}" == "#{r}"
             end)
+            |> List.first()
+
+          desc = String.replace(description, ~r/[\n\r]/, "", global: true)
 
           case r_match do
             ~m(title) ->
-              {:ok, ~s(Response: answer #{title} to #{description})}
+              {:ok, ~s(#{desc}
+                  -->> #{title})}
 
             nil ->
-              {:error, "Question #{description} (#{q}) does not have a response with id #{r}"}
+              {:error, "Question #{desc} (#{q}) does not have a response with id #{r}"}
+
+            [] ->
+              {:error, "Question #{desc} (#{q}) does not have a response with id #{r}"}
           end
       end
     end)
