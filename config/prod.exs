@@ -39,10 +39,10 @@ config :call_sync,
   airtable_table_name: "${AIRTABLE_TABLE_NAME}",
   secret: "${UPDATE_SECRET}"
 
-config :livevox,
-  access_token: "${LIVEVOX_ACCESS_TOKEN}",
-  clientname: "${LIVEVOX_CLIENT_NAME}",
-  username: "${LIVEVOX_USERNAME}",
-  password: "${LIVEVOX_PASSWORD}"
+config :call_sync,
+  lv_access_token: "${LIVEVOX_ACCESS_TOKEN}",
+  lv_clientname: "${LIVEVOX_CLIENT_NAME}",
+  lv_username: "${LIVEVOX_USERNAME}",
+  lv_password: "${LIVEVOX_PASSWORD}"
 
 config :call_sync, application_name: "${VAN_APP_NAME}"

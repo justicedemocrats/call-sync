@@ -10,8 +10,6 @@ defmodule CallSync do
       worker(Livevox.Session, [])
     ]
 
-    IO.inspect(Application.get_all_env(:livevox))
-
     opts = [strategy: :one_for_one, name: CallSync.Supervisor]
     Supervisor.start_link(children, opts)
   end

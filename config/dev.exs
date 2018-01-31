@@ -52,10 +52,10 @@ config :call_sync,
   airtable_table_name: System.get_env("AIRTABLE_TABLE_NAME"),
   secret: "secret"
 
-config :livevox,
-  access_token: System.get_env("LIVEVOX_ACCESS_TOKEN"),
-  clientname: System.get_env("LIVEVOX_CLIENT_NAME"),
-  username: System.get_env("LIVEVOX_USERNAME"),
-  password: System.get_env("LIVEVOX_PASSWORD")
+config :call_sync,
+  lv_access_token: System.get_env("LIVEVOX_ACCESS_TOKEN"),
+  lv_clientname: System.get_env("LIVEVOX_CLIENT_NAME"),
+  lv_username: System.get_env("LIVEVOX_USERNAME"),
+  lv_password: System.get_env("LIVEVOX_PASSWORD")
 
 config :call_sync, application_name: System.get_env("VAN_APP_NAME")

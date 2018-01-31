@@ -14,7 +14,7 @@ defmodule Livevox.Api do
   end
 
   defp process_request_headers(hdrs) do
-    access_token = Application.get_env(:livevox, :access_token)
+    access_token = Application.get_env(:call_sync, :lv_access_token)
 
     hdrs =
       Enum.into(
