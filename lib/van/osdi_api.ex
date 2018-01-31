@@ -9,13 +9,19 @@ defmodule Van.Osdi.Api do
 
   defp process_request_headers(hdrs) do
     api_key = Keyword.get(hdrs, :api_key)
+    mode = Keyword.get(hdrs, :mode, "van")
+    mode_int =
+      case mode do
+        "van" -> 0
+        "myc" -> 1
+      end
 
     hdrs
     |> Keyword.delete(:api_key)
     |> Enum.into(
       Accept: "application/json",
       "Content-Type": "application/json",
-      "OSDI-API-Token": "#{api_key}|0"
+      "OSDI-API-Token": "#{api_key}|#{mode_int}"
     )
   end
 
@@ -51,6 +57,7 @@ defmodule Van.Osdi.Api do
 
   def enclose_unfolder(url, opts) do
     fn result = %{"total_pages" => tps, "page" => p, "_embedded" => docs} ->
+
       key_name =
         Map.keys(docs)
         |> Enum.filter(&String.contains?(&1, "osdi:"))
@@ -58,22 +65,22 @@ defmodule Van.Osdi.Api do
 
       case docs[key_name] do
         [] ->
-          if p == tps do
+          if p == tps or p > tps do
             nil
           else
             headers = opts
             params = %{"page" => p + 1}
 
-            %{body: body = %{"_embedded" => %{"osdi:questions" => [first | rest]}}} =
+            %{body: body = %{"_embedded" => %{^key_name => [first | rest]}}} =
               get!(url, headers, params: params)
 
-            {first, Map.put(body, "_embedded", %{"osdi:questions" => rest})}
+            {first, Map.put(body, "_embedded", %{key_name => rest})}
           end
 
         [first | rest] ->
           {
             first,
-            %{"total_pages" => tps, "page" => p, "_embedded" => %{"osdi:questions" => rest}}
+            %{"total_pages" => tps, "page" => p, "_embedded" => Map.put(%{}, key_name, rest)}
           }
       end
     end

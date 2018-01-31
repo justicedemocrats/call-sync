@@ -19,10 +19,16 @@ defmodule Van.Van.Api do
 
   defp process_request_options(opts) do
     api_key = Keyword.get(opts, :api_key)
+    mode = Keyword.get(opts, :mode, "van")
+    mode_int =
+      case mode do
+        "van" -> 0
+        "myc" -> 1
+      end
 
     opts
     |> Keyword.delete(:api_key)
-    |> Keyword.put(:hackney, basic_auth: {application_name(), "#{api_key}|0"})
+    |> Keyword.put(:hackney, basic_auth: {application_name(), "#{api_key}|#{mode_int}"})
   end
 
   defp process_request_body(body) when is_map(body) do
@@ -51,7 +57,7 @@ defmodule Van.Van.Api do
 
     body
     |> Stream.unfold(fn iter ->
-      unfolder.(iter |> IO.inspect())
+      unfolder.(iter)
     end)
   end
 
@@ -68,14 +74,14 @@ defmodule Van.Van.Api do
             nil
           else
             next_opts = Keyword.update(opts, :query, %{}, &Map.put(&1, "page", p + 1))
-            %{body: body = %{"_embedded" => [first | rest]}} = get!(url, next_opts).body
-            {first, Map.put(body, "_embedded", %{"osdi:questions" => rest})}
+            %{body: body = %{"_embedded" => %{^key_name => [first | rest]}}} = get!(url, next_opts).body
+            {first, Map.put(body, "_embedded", %{key_name => rest})}
           end
 
         [first | rest] ->
           {
             first,
-            %{"total_pages" => tps, "page" => p, "_embedded" => %{"osdi:questions" => rest}}
+            %{"total_pages" => tps, "page" => p, "_embedded" => Map.put(%{}, key_name, rest)}
           }
       end
     end

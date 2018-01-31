@@ -1,13 +1,13 @@
 defmodule CallSync.Verification do
   import ShortMaps
 
-  def verify(configuration, api_key) do
+  def verify(configuration, api_key, system) do
     [questions, tags, status_codes] =
       Enum.map(
         [
-          Task.async(fn -> Van.get_questions(api_key) end),
-          Task.async(fn -> Van.get_tags(api_key) end),
-          Task.async(fn -> Van.get_status_codes(api_key) end)
+          Task.async(fn -> Van.get_questions(api_key, system) end),
+          Task.async(fn -> Van.get_tags(api_key, system) end),
+          Task.async(fn -> Van.get_status_codes(api_key, system) end)
         ],
         &Task.await/1
       )

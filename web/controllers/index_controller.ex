@@ -13,11 +13,11 @@ defmodule CallSync.IndexController do
   def configure_lookup(conn, ~m(slug)) do
     resp =
       case AirtableCache.get_all().listings[slug] do
-        ~m(api_key reference_name) ->
+        ~m(api_key reference_name system) ->
           [questions, tags, status_codes] = Enum.map([
-              Task.async(fn -> Van.get_questions(api_key) end),
-              Task.async(fn -> Van.get_tags(api_key) end),
-              Task.async(fn -> Van.get_status_codes(api_key) end)
+              Task.async(fn -> Van.get_questions(api_key, system) end),
+              Task.async(fn -> Van.get_tags(api_key, system) end),
+              Task.async(fn -> Van.get_status_codes(api_key, system) end)
             ], &Task.await/1)
 
           question_strings =
@@ -37,7 +37,11 @@ defmodule CallSync.IndexController do
             |> Enum.join("\n\n")
 
           first_question = List.first(questions)
-          first_response = List.first(first_question["responses"])
+          first_response =
+            case first_question do
+              ~m(responses) -> List.first(responses)
+              _ -> nil
+            end
 
           tag_strings =
             tags
@@ -113,9 +117,9 @@ defmodule CallSync.IndexController do
   def validate(conn, ~m(slug)) do
     resp =
       case AirtableCache.get_all().listings[slug] do
-        ~m(api_key reference_name) ->
+        ~m(api_key reference_name system) ->
           configuration = AirtableCache.get_all().configurations[slug]
-          result = CallSync.Verification.verify(configuration, api_key)
+          result = CallSync.Verification.verify(configuration, api_key, system)
 
           header_message =
             case result
