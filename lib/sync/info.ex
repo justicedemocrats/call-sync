@@ -1,6 +1,17 @@
 defmodule Sync.Info do
   import ShortMaps
 
+  def fetch_voter_id(~m(phone_dialed)) do
+    %{body: %{"findMatchingContactsDetails" => matches}} =
+      Livevox.Api.post(
+        "contact/v6.0/contacts/search",
+        body: %{"filter" => %{"phone" => phone_dialed}},
+        query: %{"count" => 100, "offset" => 0}
+      )
+
+    process_matches(matches)
+  end
+
   @doc ~S"""
   Filters and extracts the voter file id from 0, 1, or many livevox results,
   attempting helpful error messages
@@ -16,7 +27,7 @@ defmodule Sync.Info do
     {:ok, %{"district" => "ny14", "system" => "van", "id" => "1"}}
   """
   def process_matches([]) do
-    {:error, "failed to fetch_voter_id: phone not found"}
+    {:error, "failed to fetch voter id: phone not found"}
   end
 
   def process_matches([one_match]) do

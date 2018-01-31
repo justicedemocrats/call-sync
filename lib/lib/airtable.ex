@@ -136,7 +136,8 @@ defmodule CallSync.AirtableCache do
           {q, r}
         end)
 
-      {String.downcase(fields["Full On Screen Result"]), ~m(success result_code tags qr_pairs should_sync display_name)}
+      {String.downcase(fields["Full On Screen Result"]),
+       ~m(success result_code tags qr_pairs should_sync display_name)}
     end)
     |> Enum.filter(fn {_, ~m(should_sync)} -> should_sync end)
     |> Enum.map(fn {key, map} -> {key, Map.drop(map, ~w(should_sync))} end)

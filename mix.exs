@@ -43,7 +43,9 @@ defmodule CallSync.Mixfile do
       {:timex, "~> 3.1"},
       {:distillery, "~> 1.0.0"},
       {:httpoison, "~> 1.0"},
-      {:httpotion, "~> 3.0.3"}
+      {:httpotion, "~> 3.0.3"},
+      {:mongodb, "~> 0.4.3"},
+      {:poolboy, "~> 1.5.1"}
     ]
   end
 end

@@ -1,11 +1,22 @@
 defmodule Sync do
   import ShortMaps
+  require Logger
 
   @batch_size 10
 
-  def sync_candidate({slug, ~m(service_ids api_key reference_name)}) do
-    listing_configuration = CallSync.AirtableCache.get_all().listings[slug]
+  def sync_all do
+    listings = CallSync.AirtableCache.get_all().listings
+
+    Enum.map(listings, fn {slug, _} ->
+      Logger.info("Starting sync for #{slug}")
+    end)
+  end
+
+  def sync_candidate(slug) do
     service_configuration = CallSync.AirtableCache.get_all().configurations[slug]
+
+    listing_configuration =
+      ~m(service_ids api_key reference_name) = CallSync.AirtableCache.get_all().listings[slug]
 
     case listing_configuration do
       %{"system" => "csv"} ->

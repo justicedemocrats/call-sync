@@ -87,7 +87,6 @@ defmodule CallSync.Verification do
         nil ->
           {:error, "Could not find question with id: #{q}"}
 
-
         ~m(description responses) ->
           r_match =
             Enum.filter(responses, fn ~m(key) ->

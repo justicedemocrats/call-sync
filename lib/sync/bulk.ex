@@ -5,7 +5,7 @@ defmodule Sync.Bulk do
     rows =
       stream_all_unsynced(service_ids)
       |> Flow.from_enumerable()
-      # |> Flow.map(&convert_to_row/1)
+      |> Flow.map(fn call -> convert_to_row(call, service_configuration) end)
       |> Enum.to_list()
   end
 
@@ -21,6 +21,16 @@ defmodule Sync.Bulk do
   # --------------------- --------------------- ---------------------
   # ----------------------- Convert to a row ------------------------
   # --------------------- --------------------- ---------------------
+  def convert_to_row(call, service_configuration) do
+    case Sync.Info.fetch_voter_id(call) do
+      {:ok, ~m(district system id)} ->
+        [id]
+
+      {:error, error} ->
+        nil
+    end
+  end
+
   def write_result(result, call) do
     ~m(id) = call
     Db.update("calls", ~m(id), %{"$set" => %{sync_status: result}})

@@ -7,7 +7,18 @@ defmodule CallSync do
     children = [
       supervisor(CallSync.Endpoint, []),
       worker(CallSync.AirtableCache, []),
-      worker(Livevox.Session, [])
+      worker(Livevox.Session, []),
+      worker(Mongo, [
+        [
+          name: :mongo,
+          database: "livevox",
+          username: Application.get_env(:call_sync, :mongodb_username),
+          password: Application.get_env(:call_sync, :mongodb_password),
+          hostname: Application.get_env(:call_sync, :mongodb_hostname),
+          port: Application.get_env(:call_sync, :mongodb_port),
+          pool: DBConnection.Poolboy
+        ]
+      ])
     ]
 
     opts = [strategy: :one_for_one, name: CallSync.Supervisor]
