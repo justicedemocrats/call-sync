@@ -20,6 +20,7 @@ defmodule Van.Van.Api do
   defp process_request_options(opts) do
     api_key = Keyword.get(opts, :api_key)
     mode = Keyword.get(opts, :mode, "van")
+
     mode_int =
       case mode do
         "van" -> 0
@@ -74,7 +75,10 @@ defmodule Van.Van.Api do
             nil
           else
             next_opts = Keyword.update(opts, :query, %{}, &Map.put(&1, "page", p + 1))
-            %{body: body = %{"_embedded" => %{^key_name => [first | rest]}}} = get!(url, next_opts).body
+
+            %{body: body = %{"_embedded" => %{^key_name => [first | rest]}}} =
+              get!(url, next_opts).body
+
             {first, Map.put(body, "_embedded", %{key_name => rest})}
           end
 

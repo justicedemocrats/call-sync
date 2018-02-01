@@ -10,6 +10,7 @@ defmodule Van.Osdi.Api do
   defp process_request_headers(hdrs) do
     api_key = Keyword.get(hdrs, :api_key)
     mode = Keyword.get(hdrs, :mode, "van")
+
     mode_int =
       case mode do
         "van" -> 0
@@ -57,7 +58,6 @@ defmodule Van.Osdi.Api do
 
   def enclose_unfolder(url, opts) do
     fn result = %{"total_pages" => tps, "page" => p, "_embedded" => docs} ->
-
       key_name =
         Map.keys(docs)
         |> Enum.filter(&String.contains?(&1, "osdi:"))

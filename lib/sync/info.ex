@@ -59,10 +59,24 @@ defmodule Sync.Info do
     {:error, "failed to fetch voter id: bad account number format: ny14-1"}
 
   """
-  def extract_id(~m(account)) do
+  def extract_id(~m(account person)) do
+    name = "#{person["firstName"]} #{person["lastName"]}"
+
     case String.split(account, "-") do
-      [district, system, id] -> {:ok, ~m(district system id)}
-      _ -> {:error, "failed to fetch voter id: bad account number format: #{account}"}
+      [district, system, id] ->
+        {:ok, ~m(district system id name)}
+
+      _ ->
+        {:error,
+         %{
+           "message" => "failed to fetch voter id: bad account number format: #{account}",
+           "name" => name
+         }}
     end
+  end
+
+  def within_24_hours do
+    ago = Timex.shift(Timex.now(), hours: -24)
+    %{"timestamp" => %{"$gt" => ago}}
   end
 end

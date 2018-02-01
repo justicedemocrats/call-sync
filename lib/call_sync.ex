@@ -18,7 +18,8 @@ defmodule CallSync do
           port: Application.get_env(:call_sync, :mongodb_port),
           pool: DBConnection.Poolboy
         ]
-      ])
+      ]),
+      worker(CallSync.Scheduler, [])
     ]
 
     opts = [strategy: :one_for_one, name: CallSync.Supervisor]

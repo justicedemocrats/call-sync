@@ -91,12 +91,14 @@ defmodule CallSync.AirtableCache do
       {
         slugify(fields["Reference Name"]),
         %{
-          "service_ids" => String.split(fields["Service Ids"]),
+          "service_names" =>
+            String.split(fields["Service Names"], ",") |> Enum.map(&String.trim(&1)),
           "system" => fields["System"],
           "api_key" => fields["API Key"],
           "tag_ids" => fields["Tag Ids"],
-          "sync_frequency" => fields["Sync Frequency"],
-          "reference_name" => fields["Reference Name"]
+          "active" => fields["Active"],
+          "reference_name" => fields["Reference Name"],
+          "report_to" => fields["Send Report To"]
         }
       }
     end)

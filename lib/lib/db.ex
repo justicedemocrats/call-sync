@@ -5,12 +5,12 @@ defmodule Db do
     Mongo.insert_one(:mongo, collection, documents, pool: DBConnection.Poolboy)
   end
 
-  def update(collection, match, document) do
+  def update(collection, match, operation) do
     Mongo.update_many!(
       :mongo,
       collection,
       match,
-      %{"$set" => document},
+      operation,
       upsert: true,
       pool: DBConnection.Poolboy
     )

@@ -45,7 +45,12 @@ defmodule CallSync.Mixfile do
       {:httpoison, "~> 1.0"},
       {:httpotion, "~> 3.0.3"},
       {:mongodb, "~> 0.4.3"},
-      {:poolboy, "~> 1.5.1"}
+      {:poolboy, "~> 1.5.1"},
+      {:nimble_csv, "~> 0.3"},
+      {:ex_aws, "~> 2.0"},
+      {:ex_aws_s3, "~> 2.0"},
+      {:hackney, "~> 1.9"},
+      {:sweet_xml, "~> 0.6"},
     ]
   end
 end

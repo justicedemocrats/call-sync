@@ -58,4 +58,13 @@ config :call_sync,
   lv_username: System.get_env("LIVEVOX_USERNAME"),
   lv_password: System.get_env("LIVEVOX_PASSWORD")
 
+config :call_sync,
+  aws_bucket_name: System.get_env("AWS_BUCKET_NAME"),
+  zapier_hook_url: System.get_env("ZAPIER_HOOK_URL")
+
+config :ex_aws,
+  access_key_id: System.get_env("AWS_ACCESS_KEY_ID"),
+  secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY"),
+  region: System.get_env("AWS_BUCKET_REGION")
+
 config :call_sync, application_name: System.get_env("VAN_APP_NAME")

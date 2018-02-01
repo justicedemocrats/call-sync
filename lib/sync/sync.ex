@@ -2,13 +2,14 @@ defmodule Sync do
   import ShortMaps
   require Logger
 
-  @batch_size 10
-
   def sync_all do
     listings = CallSync.AirtableCache.get_all().listings
 
-    Enum.map(listings, fn {slug, _} ->
+    listings
+    |> Enum.filter(fn {_slug, entry} -> entry["active"] == true end)
+    |> Enum.map(fn {slug, _} ->
       Logger.info("Starting sync for #{slug}")
+      sync_candidate(slug)
     end)
   end
 
@@ -16,19 +17,16 @@ defmodule Sync do
     service_configuration = CallSync.AirtableCache.get_all().configurations[slug]
 
     listing_configuration =
-      ~m(service_ids api_key reference_name) = CallSync.AirtableCache.get_all().listings[slug]
+      ~m(service_names api_key reference_name) = CallSync.AirtableCache.get_all().listings[slug]
 
     case listing_configuration do
       %{"system" => "csv"} ->
-        Sync.Bulk.sync_bulk(slug, service_ids, service_configuration)
+        Sync.Bulk.sync_bulk(slug, service_names, service_configuration)
 
-      %{"system" => "van", "api_key" => api_key, "service_ids" => service_ids} ->
-        Sync.Batch.sync_batch(slug, service_ids, service_configuration, api_key)
+      %{"system" => mode, "api_key" => api_key, "service_names" => service_names} ->
+        Sync.Batch.sync_batch(slug, service_names, service_configuration, api_key, mode)
     end
-  end
 
-  def write_result(result, call) do
-    ~m(id) = call
-    Db.update("calls", ~m(id), %{"$set" => %{sync_status: result}})
+    Logger.info "Done!"
   end
 end

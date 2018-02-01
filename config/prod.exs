@@ -45,4 +45,9 @@ config :call_sync,
   lv_username: "${LIVEVOX_USERNAME}",
   lv_password: "${LIVEVOX_PASSWORD}"
 
+config :ex_aws,
+  access_key_id: ["${AWS_ACCESS_KEY_ID}", :instance_role],
+  secret_access_key: ["${AWS_SECRET_ACCESS_KEY}", :instance_role]
+
+
 config :call_sync, application_name: "${VAN_APP_NAME}"

@@ -10,13 +10,20 @@ defmodule Van do
   end
 
   def get_status_codes(api_key, mode \\ "van") do
-    {:ok, %{body: body}} = Van.Van.Api.get("canvassResponses/resultCodes", [], api_key: api_key, mode: mode)
+    {:ok, %{body: body}} =
+      Van.Van.Api.get("canvassResponses/resultCodes", [], api_key: api_key, mode: mode)
+
     body
   end
 
   def record_canvass(voter_id, canvass, api_key, mode \\ "van") do
     {:ok, %{body: body}} =
-      Van.Osdi.Api.post("people/#{voter_id}/record_canvass_helper", canvass, [], api_key: api_key, mode: mode)
+      Van.Osdi.Api.post(
+        "people/#{voter_id}/record_canvass_helper",
+        canvass,
+        [api_key: api_key,
+        mode: mode]
+      )
 
     body
   end
