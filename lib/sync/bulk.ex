@@ -14,7 +14,7 @@ defmodule Sync.Bulk do
       |> Enum.to_list()
 
     ids = Enum.map(results, fn {id, _} -> id end)
-    rows = [header_row | Enum.map(results, fn {_, row} -> row end)]
+    rows = [header_row() | Enum.map(results, fn {_, row} -> row end)]
 
     time_comp = Timex.now() |> Timex.shift(days: -1) |> Timex.format!("{0M}-{0D}-{YYYY}")
     random_bits = Enum.map(0..8, fn _ -> Enum.random(0..9) end) |> Enum.join("")
@@ -53,7 +53,8 @@ defmodule Sync.Bulk do
     [
       "Voter File",
       "Voter ID",
-      "Voter Name",
+      "Voter First Name",
+      "Voter Last Name",
       "Voter Phone",
       "Date Called",
       "Result",
@@ -72,8 +73,8 @@ defmodule Sync.Bulk do
       ) do
     beginning =
       case Sync.Info.fetch_voter_id(call) do
-        {:ok, ~m(district system id name)} -> [system, id, name]
-        {:error, ~m(message name)} -> ["Unknown", message, name]
+        {:ok, ~m(district system id first_name last_name)} -> [system, id, first_name, last_name]
+        {:error, ~m(message first_name last_name)} -> ["Unknown", message, first_name, last_name]
       end
 
     row = Enum.concat(beginning, [

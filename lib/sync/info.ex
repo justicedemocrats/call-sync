@@ -60,18 +60,16 @@ defmodule Sync.Info do
 
   """
   def extract_id(~m(account person)) do
-    name = "#{person["firstName"]} #{person["lastName"]}"
+    first_name = person["firstName"]
+    last_name = person["lastName"]
 
     case String.split(account, "-") do
       [district, system, id] ->
-        {:ok, ~m(district system id name)}
+        {:ok, ~m(district system id first_name last_name)}
 
       _ ->
-        {:error,
-         %{
-           "message" => "failed to fetch voter id: bad account number format: #{account}",
-           "name" => name
-         }}
+        message = "failed to fetch voter id: bad account number format: #{account}"
+        {:error, ~m(message first_name last_name)}
     end
   end
 
