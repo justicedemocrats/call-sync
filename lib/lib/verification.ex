@@ -19,12 +19,17 @@ defmodule CallSync.Verification do
     |> Enum.map(fn {_result, components} ->
       Flow.from_enumerable(components)
       |> Enum.flat_map(fn {type, value} ->
-        verified = verify_component(type, value, data)
+        case type do
+          "csv_only" -> []
+          "should_sync" -> []
+          _ ->
+            verified = verify_component(type, value, data)
 
-        if is_list(verified) do
-          verified
-        else
-          [verified]
+            if is_list(verified) do
+              verified
+            else
+              [verified]
+            end
         end
       end)
       |> Enum.to_list()
