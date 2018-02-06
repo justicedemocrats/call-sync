@@ -21,10 +21,10 @@ defmodule Van do
       Van.Osdi.Api.post(
         "people/#{voter_id}/record_canvass_helper",
         canvass,
-        [api_key: api_key,
-        mode: mode]
+        api_key: api_key,
+        mode: mode
       )
 
-    body
+    {:ok, body}
   end
 end

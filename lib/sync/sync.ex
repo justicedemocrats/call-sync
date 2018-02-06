@@ -23,10 +23,20 @@ defmodule Sync do
       %{"system" => "csv"} ->
         Sync.Bulk.sync_bulk(slug, service_names, service_configuration)
 
-      %{"system" => mode, "api_key" => api_key, "service_names" => service_names} ->
-        Sync.Batch.sync_batch(slug, service_names, service_configuration, api_key, mode)
+      %{"strategy" => "all csv"} ->
+        Sync.Bulk.sync_bulk(slug, service_names, service_configuration)
+
+      ~m(system api_key service_names strategy) ->
+        Sync.Batch.sync_batch(
+          slug,
+          service_names,
+          service_configuration,
+          api_key,
+          system,
+          strategy
+        )
     end
 
-    Logger.info "Done!"
+    Logger.info("Done!")
   end
 end

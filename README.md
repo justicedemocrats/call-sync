@@ -39,8 +39,8 @@ If things went wrong, there are two places it could have happened:
 * We could have not been able to configure the post body correctly, likely due
   to misconfigured Livevox data.
 
-This leads to the following values for `sync.status`:
-[`unsynced`, `in_progress`, `finished`, `ignored`, `queued_for_csv`, `attempted_error`, `unattempted_error`]
+This leads to the following values for `sync_status`:
+[`unsynced` (no attribute present), `in_progress`, `finished`, `ignored`, `queued_for_csv`, `attempted_error`, `unattempted_error`]
 
 ## Running
 

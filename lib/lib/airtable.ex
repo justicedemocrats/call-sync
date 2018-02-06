@@ -86,7 +86,7 @@ defmodule CallSync.AirtableCache do
 
   defp process_integration_listings(records) do
     records
-    |> Enum.filter(fn ~m(fields) -> Map.has_key?(fields, "API Key") end)
+    |> Enum.filter(fn ~m(fields) -> Map.has_key?(fields, "Service Names") end)
     |> Enum.map(fn ~m(fields) ->
       {
         slugify(fields["Reference Name"]),
@@ -98,6 +98,7 @@ defmodule CallSync.AirtableCache do
           "tag_ids" => fields["Tag Ids"],
           "active" => fields["Active"],
           "reference_name" => fields["Reference Name"],
+          "strategy" => fields["Strategy"],
           "report_to" => fields["Send Report To"]
         }
       }
@@ -110,7 +111,8 @@ defmodule CallSync.AirtableCache do
     |> Enum.map(fn ~m(fields) ->
       success = fields["Success"] == true
       result_code = fields["Canvass Result Code"]
-      should_sync = fields["Should Sync"]
+      should_sync = fields["Sync to System"]
+      csv_only = fields["Include in CSV"]
       display_name = fields["Display Name"]
 
       tags =
@@ -127,7 +129,9 @@ defmodule CallSync.AirtableCache do
           "Success",
           "Canvass Result Code",
           "Used?",
-          "Should Sync"
+          "Sync to System",
+          "Include in CSV",
+          "Display Name"
         ])
 
       qr_pairs =
@@ -139,9 +143,9 @@ defmodule CallSync.AirtableCache do
         end)
 
       {String.downcase(fields["Full On Screen Result"]),
-       ~m(success result_code tags qr_pairs should_sync display_name)}
+       ~m(success result_code tags qr_pairs should_sync display_name should_sync csv_only)}
     end)
-    |> Enum.filter(fn {_, ~m(should_sync)} -> should_sync end)
+    |> Enum.filter(fn {_, ~m(should_sync csv_only)} -> should_sync == true or csv_only == true end)
     |> Enum.map(fn {key, map} -> {key, Map.drop(map, ~w(should_sync))} end)
     |> Enum.into(%{})
   end
