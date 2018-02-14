@@ -7,7 +7,9 @@ defmodule Sync.Bulk do
     ~m(file_url aggregated_results) =
       Sync.Csv.result_stream_to_csv(bulk_results_stream, slug, config)
 
-    Notifier.send(slug, "all csv", ~m(file_url aggregated_results))
+    total = Sync.Info.value_sum(aggregated_results)
+
+    Notifier.send(slug, "all csv", ~m(file_url aggregated_results total))
   end
 
   def stream_all_unsynced(service_names) do

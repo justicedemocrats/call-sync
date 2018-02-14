@@ -3,19 +3,29 @@ defmodule Notifier do
   require Logger
 
   def zap_url, do: Application.get_env(:call_sync, :zapier_hook_url)
+  def second_zap_url, do: Application.get_env(:call_sync, :second_zapier_hook_url)
 
   def send(slug, type, data) do
     config = ~m(report_to) = CallSync.AirtableCache.get_all().listings[slug]
-    day = Timex.now() |> Timex.shift(hours: -8) |> Timex.format!("{0M}-{0D}")
+    day = Timex.now() |> Timex.shift(days: -1) |> Timex.format!("{0M}-{0D}")
 
     subject = "Dialer Results for #{day}"
-    text = format_text(config, type, data, day)
+
+    ~m(aggregated_results) = data
+
+    text =
+      if length(aggregated_results) == 0 do
+        zero_message(config)
+      else
+        format_text(config, type, data, day)
+      end
 
     Logger.info("Sending webhook to #{zap_url()} for report for #{slug} to #{report_to}")
     HTTPotion.post(zap_url(), body: Poison.encode!(~m(text report_to subject)))
+    HTTPotion.post(second_zap_url(), body: Poison.encode!(combine_results(data)))
   end
 
-  def format_text(~m(reference_name), "all csv", ~m(file_url aggregated_results), day) do
+  def format_text(~m(reference_name), "all csv", ~m(file_url aggregated_results total), day) do
     results =
       Enum.map(aggregated_results, fn {key, count} ->
         ~s(\t\t#{String.pad_trailing(key, 10)}\t=>\t#{
@@ -33,8 +43,34 @@ Your dialer results for #{reference_name} on #{day} have been processed and are 
 
 Note that this link will expire after 2 days for security reasons, so please download and save your results now.
 
+Here's a breakdown of your #{total} total results for the day:
+#{results}
+
+Any questions? Just reply to this email and it will go to Ben (programmer person at JD).
+]
+  end
+
+  def format_text(
+        ~m(reference_name system),
+        "full",
+        ~m(aggregated_results success_count error_count total),
+        day
+      ) do
+    results =
+      Enum.map(aggregated_results, fn {key, count} ->
+        ~s(\t\t#{key}\t=>\t#{count})
+      end)
+      |> Enum.join("\n")
+
+    ~s[
+Hello! Hope you're having a good morning.
+
+Your dialer results for #{reference_name} on #{day} have been processed and uploaded to #{system}.
+
 Here's a breakdown of your results for the day:
 #{results}
+
+We successfully synced #{success_count}, and there were #{error_count} errors.
 
 Any questions? Just reply to this email and it will go to Ben (programmer person at JD).
 ]
@@ -63,33 +99,7 @@ Here's a breakdown of your results for the day:
 We successfully synced #{success_count}, and there were #{error_count} errors.
 
 Any questions? Just reply to this email and it will go to Ben (programmer person at JD).
-] |> IO.inspect()
-  end
-
-  def format_text(
-        ~m(reference_name system),
-        "full",
-        ~m(aggregated_results success_count error_count),
-        day
-      ) do
-    results =
-      Enum.map(aggregated_results, fn {key, count} ->
-        ~s(\t\t#{key}\t=>\t#{count})
-      end)
-      |> Enum.join("\n")
-
-    ~s[
-Hello! Hope you're having a good morning.
-
-Your dialer results for #{reference_name} on #{day} have been processed and uploaded to #{system}.
-
-Here's a breakdown of your results for the day:
-#{results}
-
-We successfully synced #{success_count}, and there were #{error_count} errors.
-
-Any questions? Just reply to this email and it will go to Ben (programmer person at JD).
-] |> IO.inspect()
+]
   end
 
   def format_text(
@@ -118,6 +128,32 @@ To save you money, some of the results were not synced to your VAN. You can
 download the unsynced results here: #{file_url}.
 
 Any questions? Just reply to this email and it will go to Ben (programmer person at JD).
-] |> IO.inspect()
+]
+  end
+
+  def zero_message(~m(reference_name)) do
+    ~s[
+Hello! Hope you're having a good morning.
+
+No calls were made for #{reference_name} yesterday, so this email is just to let
+you know that our results reporting system are up and running :)
+
+Any questions? Just reply to this email and it will go to Ben (programmer person at JD).
+    ]
+  end
+
+  def combine_results(~m(aggregated_results csv_aggregated_results total csv_total)) do
+    full_aggregation =
+      Enum.concat(Map.keys(aggregated_results), Map.keys(csv_aggregated_results))
+      |> Enum.map(fn value ->
+        {value, (aggregated_results[value] || 0) + (csv_aggregated_results[value] || 0)}
+      end)
+
+    full_total = total + csv_total
+    Map.merge(full_aggregation, %{"total" => full_total})
+  end
+
+  def combine_results(~m(aggregated_results total)) do
+    Map.merge(aggregated_results, ~m(total))
   end
 end

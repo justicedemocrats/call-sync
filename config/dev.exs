@@ -38,8 +38,11 @@ config :call_sync, update_secret: System.get_env("UPDATE_SECRET")
 
 config :call_sync,
   mongodb_username: System.get_env("MONGO_USERNAME"),
-  mongodb_hostname: System.get_env("MONGO_HOSTNAME"),
   mongodb_password: System.get_env("MONGO_PASSWORD"),
+  mongodb_seeds: [
+    System.get_env("MONGO_SEED_1"),
+    System.get_env("MONGO_SEED_2")
+  ],
   mongodb_port: System.get_env("MONGO_PORT")
 
 config :rollbax,
@@ -60,7 +63,8 @@ config :call_sync,
 
 config :call_sync,
   aws_bucket_name: System.get_env("AWS_BUCKET_NAME"),
-  zapier_hook_url: System.get_env("ZAPIER_HOOK_URL")
+  zapier_hook_url: System.get_env("ZAPIER_HOOK_URL"),
+  second_zapier_hook_url: System.get_env("SECOND_ZAPIER_HOOK_URL")
 
 config :ex_aws,
   access_key_id: System.get_env("AWS_ACCESS_KEY_ID"),

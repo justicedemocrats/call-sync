@@ -14,7 +14,7 @@ defmodule CallSync do
           database: "livevox",
           username: Application.get_env(:call_sync, :mongodb_username),
           password: Application.get_env(:call_sync, :mongodb_password),
-          hostname: Application.get_env(:call_sync, :mongodb_hostname),
+          seeds: Application.get_env(:call_sync, :mongodb_seeds),
           port: Application.get_env(:call_sync, :mongodb_port),
           pool: DBConnection.Poolboy
         ]

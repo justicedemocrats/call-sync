@@ -25,7 +25,7 @@ config :call_sync, update_secret: "${UPDATE_SECRET}"
 
 config :call_sync,
   mongodb_username: "${MONGO_USERNAME}",
-  mongodb_hostname: "${MONGO_HOSTNAME}",
+  mongodb_seeds: ["${MONGO_SEED_1}", "${MONGO_SEED_2}"],
   mongodb_password: "${MONGO_PASSWORD}",
   mongodb_port: "${MONGO_PORT}"
 
@@ -44,6 +44,11 @@ config :call_sync,
   lv_clientname: "${LIVEVOX_CLIENT_NAME}",
   lv_username: "${LIVEVOX_USERNAME}",
   lv_password: "${LIVEVOX_PASSWORD}"
+
+config :call_sync,
+  aws_bucket_name: System.get_env("AWS_BUCKET_NAME"),
+  zapier_hook_url: System.get_env("ZAPIER_HOOK_URL"),
+  second_zapier_hook_url: System.get_env("SECOND_ZAPIER_HOOK_URL")
 
 config :ex_aws,
   access_key_id: ["${AWS_ACCESS_KEY_ID}", :instance_role],

@@ -1,4 +1,5 @@
 defmodule Sync.Batch do
+  require Logger
   import ShortMaps
 
   @batch_size 10
@@ -10,10 +11,14 @@ defmodule Sync.Batch do
   # Otherwise
   #   -> recurse!
   def sync_batch(slug, service_names, service_configuration, api_key, mode, strategy) do
+    Logger.info("Doing batch")
+
     batch_done =
       fetch_sync_batch_for(service_names)
       |> Enum.map(fn call -> task_sync_call(call, service_configuration, api_key, mode) end)
       |> Enum.map(fn t -> Task.await(t, 30_000) end)
+
+    Logger.info("Did batch")
 
     if length(batch_done) == 0 do
       %{"aggregated_results" => csv_aggregated_results, "file_url" => file_url} =
@@ -30,10 +35,13 @@ defmodule Sync.Batch do
         ]
         |> Enum.map(&Task.await/1)
 
+      total = Sync.Info.value_sum(aggregated_results)
+      csv_total = Sync.Info.value_sum(csv_aggregated_results)
+
       Notifier.send(
         slug,
         strategy,
-        ~m(aggregated_results success_count error_count csv_aggregated_results)
+        ~m(aggregated_results success_count error_count csv_aggregated_results file_url total csv_total)
       )
     else
       sync_batch(slug, service_names, service_configuration, api_key, mode, strategy)

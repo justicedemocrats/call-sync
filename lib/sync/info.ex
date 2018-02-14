@@ -1,6 +1,17 @@
 defmodule Sync.Info do
   import ShortMaps
 
+  def fetch_voter_id(phone_dialed) when is_binary(phone_dialed) do
+    %{body: %{"findMatchingContactsDetails" => matches}} =
+      Livevox.Api.post(
+        "contact/v6.0/contacts/search",
+        body: %{"filter" => %{"phone" => phone_dialed}},
+        query: %{"count" => 100, "offset" => 0}
+      )
+
+    process_matches(matches)
+  end
+
   def fetch_voter_id(~m(phone_dialed)) do
     %{body: %{"findMatchingContactsDetails" => matches}} =
       Livevox.Api.post(
@@ -27,7 +38,10 @@ defmodule Sync.Info do
     {:ok, %{"district" => "ny14", "system" => "van", "id" => "1"}}
   """
   def process_matches([]) do
-    {:error, "failed to fetch voter id: phone not found"}
+    message = "failed to fetch voter id: phone not found"
+    first_name = ""
+    last_name = ""
+    {:error, ~m(message first_name last_name)}
   end
 
   def process_matches([one_match]) do
@@ -76,5 +90,13 @@ defmodule Sync.Info do
   def within_24_hours do
     ago = Timex.shift(Timex.now(), hours: -24)
     %{"timestamp" => %{"$gt" => ago}}
+  end
+
+  def value_sum(map) when is_map(map) do
+    Map.values(map) |> Enum.sum()
+  end
+
+  def value_sum(nil) do
+    0
   end
 end

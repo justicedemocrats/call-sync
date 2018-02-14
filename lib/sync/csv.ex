@@ -1,17 +1,30 @@
 defmodule Sync.Csv do
   import ShortMaps
   import SweetXml
+  require Logger
   alias NimbleCSV.RFC4180, as: CSV
+
+  @print_interval 100
 
   def bucket_name, do: Application.get_env(:call_sync, :aws_bucket_name)
 
   def result_stream_to_csv(results_stream, slug, config) do
+    Logger.info "Starting processing..."
+
     results =
       results_stream
-      |> Flow.from_enumerable()
-      |> Flow.filter(fn call -> should_sync(call, config) end)
-      |> Flow.map(fn call -> convert_to_row(call, config) end)
+      |> Stream.with_index()
+      |> Flow.from_enumerable(min_demand: 50, max_demand: 100)
+      |> Flow.filter(fn {call, idx} -> {should_sync(call, config), idx} end)
+      |> Flow.map(fn {call, idx} ->
+        if rem(idx, @print_interval) == 0 do
+          Logger.info "Doing #{idx}"
+        end
+        convert_to_row(call, config)
+      end)
       |> Enum.to_list()
+
+    Logger.info "...done processing"
 
     ids = Enum.map(results, fn {id, _} -> id end)
     rows = [header_row() | Enum.map(results, fn {_, row} -> row end)]
@@ -21,10 +34,12 @@ defmodule Sync.Csv do
     file_name = "#{slug}-#{time_comp}-#{random_bits}.csv"
 
     path = write_to_temp_file(rows, file_name)
+    Logger.info "Wrote to temp file #{path}."
     file_url = upload_to_s3(path, file_name)
+    Logger.info "Uploaded to #{file_url}"
     delete_temp_file(path)
 
-    mark_uploaded(ids, file_url)
+    mark_uploaded(ids, "#{file_url}")
     aggregated_results = aggregate(rows)
 
     ~m(file_url aggregated_results)
@@ -47,17 +62,17 @@ defmodule Sync.Csv do
     ]
   end
 
-  def should_sync(call = ~m(full_on_screen_result), config) do
+  def should_sync(~m(full_on_screen_result), config) do
     Map.has_key?(config, full_on_screen_result)
   end
 
   def convert_to_row(
-        call = ~m(phone_dialed timestamp full_on_screen_result agent_name caller_email id),
+        call = ~m(phone_dialed timestamp full_on_screen_result agent_name id),
         config
       ) do
     beginning =
       case Sync.Info.fetch_voter_id(call) do
-        {:ok, ~m(district system id first_name last_name)} -> [system, id, first_name, last_name]
+        {:ok, ~m(system id first_name last_name)} -> [system, id, first_name, last_name]
         {:error, ~m(message first_name last_name)} -> ["Unknown", message, first_name, last_name]
       end
 
@@ -67,7 +82,7 @@ defmodule Sync.Csv do
         timestamp |> Timex.shift(hours: -8) |> Timex.format!("{0M}-{0D}-{YYYY}"),
         config[full_on_screen_result]["display_name"] || full_on_screen_result,
         agent_name,
-        caller_email
+        call["caller_email"]
       ])
 
     {id, row}
@@ -113,11 +128,11 @@ defmodule Sync.Csv do
   end
 
   def aggregate(rows) do
-    Enum.reduce(rows, %{}, fn [_a, _b, _c, _d, _e, f, _g, _h], acc ->
-      Map.update(acc, f, 1, &(&1 + 1))
+    Enum.reduce(rows, %{}, fn [_a, _b, _c, _d, _e, _f, g, _h, _i], acc ->
+      Map.update(acc, g, 1, &(&1 + 1))
     end)
     |> Map.drop(~w(Result))
     |> Enum.map(fn tuple -> tuple end)
-    |> Enum.sort_by(fn {_key, val} -> val end)
+    |> Enum.sort_by(fn {key, _val} -> key end)
   end
 end
