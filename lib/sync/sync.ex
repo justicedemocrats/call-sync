@@ -2,6 +2,24 @@ defmodule Sync do
   import ShortMaps
   require Logger
 
+  def sync_current_iteration do
+    now = Timex.now("America/New_York")
+    before = Timex.now() |> Timex.shift(minutes: -30)
+
+    CallSync.AirtableCache.get_all().listings
+    |> Enum.filter(fn {_slug, config} -> is_queued(config, now, before) end)
+    |> Enum.map(fn {slug, _} ->
+      Logger.info("Starting sync for #{slug}")
+      sync_candidate(slug)
+    end)
+  end
+
+  def is_queued(~m(sync_time), now, before) do
+    {hours, _} = Integer.parse(sync_time)
+    sync_date_time = Timex.now("America/New_York") |> Timex.set(hour: hours, minute: 0)
+    sync_date_time |> Timex.before?(now) and sync_date_time |> Timex.after?(before)
+  end
+
   def sync_all do
     listings = CallSync.AirtableCache.get_all().listings
 
@@ -16,8 +34,7 @@ defmodule Sync do
   def sync_candidate(slug) do
     service_configuration = CallSync.AirtableCache.get_all().configurations[slug]
 
-    listing_configuration =
-      ~m(service_names api_key reference_name) = CallSync.AirtableCache.get_all().listings[slug]
+    listing_configuration = ~m(service_names) = CallSync.AirtableCache.get_all().listings[slug]
 
     case listing_configuration do
       %{"system" => "csv"} ->

@@ -3,8 +3,6 @@ defmodule CallSync.AirtableCache do
   require Logger
   import ShortMaps
 
-  @interval 1_000_000
-
   def key, do: Application.get_env(:call_sync, :airtable_key)
   def base, do: Application.get_env(:call_sync, :airtable_base)
   def root_table, do: Application.get_env(:call_sync, :airtable_table_name)
@@ -50,9 +48,9 @@ defmodule CallSync.AirtableCache do
   defp fetch_all(for_table) do
     %{body: body} =
       HTTPotion.get(
-        "https://api.airtable.com/v0/#{base}/#{URI.encode(for_table)}",
+        "https://api.airtable.com/v0/#{base()}/#{URI.encode(for_table)}",
         headers: [
-          Authorization: "Bearer #{key}"
+          Authorization: "Bearer #{key()}"
         ],
         timeout: :infinity
       )
@@ -67,9 +65,9 @@ defmodule CallSync.AirtableCache do
   defp fetch_all(for_table, records, offset) do
     %{body: body} =
       HTTPotion.get(
-        "https://api.airtable.com/v0/#{base}/#{for_table}",
+        "https://api.airtable.com/v0/#{base()}/#{for_table}",
         headers: [
-          Authorization: "Bearer #{key}"
+          Authorization: "Bearer #{key()}"
         ],
         query: [offset: offset],
         timeout: :infinity
@@ -99,7 +97,8 @@ defmodule CallSync.AirtableCache do
           "active" => fields["Active"],
           "reference_name" => fields["Reference Name"],
           "strategy" => fields["Strategy"],
-          "report_to" => fields["Send Report To"]
+          "report_to" => fields["Send Report To"],
+          "sync_time" => fields["Sync Time (EST)"]
         }
       }
     end)
@@ -143,7 +142,7 @@ defmodule CallSync.AirtableCache do
         end)
 
       {String.downcase(fields["Full On Screen Result"]),
-       ~m(success result_code tags qr_pairs should_sync display_name should_sync csv_only)}
+       ~m(success result_code tags qr_pairs display_name should_sync csv_only)}
     end)
     |> Enum.filter(fn {_, ~m(should_sync csv_only)} -> should_sync == true or csv_only == true end)
     # |> Enum.map(fn {key, map} -> {key, Map.drop(map, ~w(should_sync))} end)

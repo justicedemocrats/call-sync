@@ -88,8 +88,14 @@ defmodule Sync.Info do
   end
 
   def within_24_hours do
-    ago = Timex.shift(Timex.now(), hours: -24)
+    ago = Timex.shift(Timex.now(), hours: -144)
     %{"timestamp" => %{"$gt" => ago}}
+  end
+
+  def value_sum(list) when is_list(list) do
+    list
+    |> Enum.into(%{})
+    |> value_sum()
   end
 
   def value_sum(map) when is_map(map) do

@@ -143,17 +143,23 @@ Any questions? Just reply to this email and it will go to Ben (programmer person
   end
 
   def combine_results(~m(aggregated_results csv_aggregated_results total csv_total)) do
+    aggregated_results = Enum.into(aggregated_results, %{})
+    csv_aggregated_results = Enum.into(csv_aggregated_results, %{})
+
     full_aggregation =
       Enum.concat(Map.keys(aggregated_results), Map.keys(csv_aggregated_results))
       |> Enum.map(fn value ->
         {value, (aggregated_results[value] || 0) + (csv_aggregated_results[value] || 0)}
       end)
+      |> Enum.into(%{})
 
     full_total = total + csv_total
     Map.merge(full_aggregation, %{"total" => full_total})
   end
 
   def combine_results(~m(aggregated_results total)) do
-    Map.merge(aggregated_results, ~m(total))
+    aggregated_results
+    |> Enum.into(%{})
+    |> Map.merge(~m(total))
   end
 end
