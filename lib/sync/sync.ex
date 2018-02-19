@@ -3,6 +3,8 @@ defmodule Sync do
   require Logger
 
   def sync_current_iteration do
+    Logger.info("It's 5 after! Checking who to sync.")
+
     now = Timex.now("America/New_York")
     before = Timex.now() |> Timex.shift(minutes: -30)
 
@@ -14,10 +16,22 @@ defmodule Sync do
     end)
   end
 
-  def is_queued(~m(sync_time), now, before) do
+  def is_queued(~m(sync_time reference_name), now, before) do
     {hours, _} = Integer.parse(sync_time)
     sync_date_time = Timex.now("America/New_York") |> Timex.set(hour: hours, minute: 0)
-    sync_date_time |> Timex.before?(now) and sync_date_time |> Timex.after?(before)
+
+    cond do
+      sync_date_time |> Timex.after?(now) ->
+        Logger.info("Not syncing #{reference_name}, it's too early")
+        false
+
+      sync_date_time |> Timex.before?(before) ->
+        Logger.info("Not syncing #{reference_name}, it's too late")
+        false
+
+      true ->
+        true
+    end
   end
 
   def sync_all do

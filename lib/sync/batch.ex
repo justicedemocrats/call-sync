@@ -76,8 +76,8 @@ defmodule Sync.Batch do
     mark_started(call)
 
     with {:ok, body} <- configure_body(call, config),
-         {:ok, ~m(district system id)} <- Sync.Info.fetch_voter_id(call),
-         {:ok, osdi_result = ~m(identifiers)} <- Van.record_canvass(id, body, api_key, mode) do
+         {:ok, ~m(id)} <- Sync.Info.fetch_voter_id(call),
+         {:ok, ~m(identifiers)} <- Van.record_canvass(id, body, api_key, mode) do
       sync_status = "finished"
       receipt = List.first(identifiers)
       synced_at = DateTime.utc_now()
@@ -161,6 +161,11 @@ defmodule Sync.Batch do
   end
 
   def fetch_aggregated_results(service_names, config) do
+    zeros =
+      Map.values(config)
+      |> Enum.map(fn ~m(display_name) -> {display_name, 0} end)
+      |> Enum.into(%{})
+
     Db.find(
       "calls",
       Sync.Info.within_24_hours()
@@ -171,6 +176,7 @@ defmodule Sync.Batch do
       result = config[full_on_screen_result]["display_name"] || full_on_screen_result
       Map.update(acc, result, 1, &(&1 + 1))
     end)
+    |> Enum.into(zeros)
     |> Enum.map(fn tuple -> tuple end)
     |> Enum.sort_by(fn {_key, val} -> val end)
   end
@@ -205,13 +211,12 @@ defmodule Sync.Batch do
   end
 
   def upload_queued(slug, service_names, service_configuration) do
-    queued_stream =
-      Db.find(
-        "calls",
-        Sync.Info.within_24_hours()
-        |> Map.merge(%{"sync_status" => "queued_for_csv"})
-        |> Map.merge(%{"service_name" => %{"$in" => service_names}})
-      )
-      |> Sync.Csv.result_stream_to_csv(slug, service_configuration)
+    Db.find(
+      "calls",
+      Sync.Info.within_24_hours()
+      |> Map.merge(%{"sync_status" => "queued_for_csv"})
+      |> Map.merge(%{"service_name" => %{"$in" => service_names}})
+    )
+    |> Sync.Csv.result_stream_to_csv(slug, service_configuration)
   end
 end

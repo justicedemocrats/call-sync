@@ -9,7 +9,7 @@ defmodule Sync.Csv do
   def bucket_name, do: Application.get_env(:call_sync, :aws_bucket_name)
 
   def result_stream_to_csv(results_stream, slug, config) do
-    Logger.info "Starting processing..."
+    Logger.info("Starting processing...")
 
     results =
       results_stream
@@ -18,13 +18,14 @@ defmodule Sync.Csv do
       |> Flow.filter(fn {call, idx} -> {should_sync(call, config), idx} end)
       |> Flow.map(fn {call, idx} ->
         if rem(idx, @print_interval) == 0 do
-          Logger.info "Doing #{idx}"
+          Logger.info("Doing #{idx}")
         end
+
         convert_to_row(call, config)
       end)
       |> Enum.to_list()
 
-    Logger.info "...done processing"
+    Logger.info("...done processing")
 
     ids = Enum.map(results, fn {id, _} -> id end)
     rows = [header_row() | Enum.map(results, fn {_, row} -> row end)]
@@ -34,13 +35,13 @@ defmodule Sync.Csv do
     file_name = "#{slug}-#{time_comp}-#{random_bits}.csv"
 
     path = write_to_temp_file(rows, file_name)
-    Logger.info "Wrote to temp file #{path}."
+    Logger.info("Wrote to temp file #{path}.")
     file_url = upload_to_s3(path, file_name)
-    Logger.info "Uploaded to #{file_url}"
+    Logger.info("Uploaded to #{file_url}")
     delete_temp_file(path)
 
     mark_uploaded(ids, "#{file_url}")
-    aggregated_results = aggregate(rows)
+    aggregated_results = aggregate(rows, config)
 
     ~m(file_url aggregated_results)
   end
@@ -127,11 +128,17 @@ defmodule Sync.Csv do
     File.rm(path)
   end
 
-  def aggregate(rows) do
+  def aggregate(rows, config) do
+    zeros =
+      Map.values(config)
+      |> Enum.map(fn ~m(display_name) -> {display_name, 0} end)
+      |> Enum.into(%{})
+
     Enum.reduce(rows, %{}, fn [_a, _b, _c, _d, _e, _f, g, _h, _i], acc ->
       Map.update(acc, g, 1, &(&1 + 1))
     end)
     |> Map.drop(~w(Result))
+    |> Enum.into(zeros)
     |> Enum.map(fn tuple -> tuple end)
     |> Enum.sort_by(fn {key, _val} -> key end)
   end

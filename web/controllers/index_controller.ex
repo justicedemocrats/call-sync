@@ -4,21 +4,25 @@ defmodule CallSync.IndexController do
   use CallSync.Web, :controller
 
   def index(conn, _) do
-    text conn, ~s(
+    text(conn, ~s(
       ENDPOINTS:
         /configure/:integration-name
-    )
+    ))
   end
 
   def configure_lookup(conn, ~m(slug)) do
     resp =
       case AirtableCache.get_all().listings[slug] do
         ~m(api_key reference_name system) ->
-          [questions, tags, status_codes] = Enum.map([
-              Task.async(fn -> Van.get_questions(api_key, system) end),
-              Task.async(fn -> Van.get_tags(api_key, system) end),
-              Task.async(fn -> Van.get_status_codes(api_key, system) end)
-            ], &Task.await/1)
+          [questions, tags, status_codes] =
+            Enum.map(
+              [
+                Task.async(fn -> Van.get_questions(api_key, system) end),
+                Task.async(fn -> Van.get_tags(api_key, system) end),
+                Task.async(fn -> Van.get_status_codes(api_key, system) end)
+              ],
+              &Task.await/1
+            )
 
           question_strings =
             questions
@@ -37,6 +41,7 @@ defmodule CallSync.IndexController do
             |> Enum.join("\n\n")
 
           first_question = List.first(questions)
+
           first_response =
             case first_question do
               ~m(responses) -> List.first(responses)
@@ -102,51 +107,55 @@ defmodule CallSync.IndexController do
             #{question_strings}
           ]
 
-      _no_match ->
-        options =
-          AirtableCache.get_all().listings
-          |> Enum.map(fn {slug, _} -> slug end)
-          |> Enum.join(", ")
+        _no_match ->
+          options =
+            AirtableCache.get_all().listings
+            |> Enum.map(fn {slug, _} -> slug end)
+            |> Enum.join(", ")
 
-        ~s(that was an invalid integration reference name – try one of #{options})
+          ~s(that was an invalid integration reference name – try one of #{options})
       end
 
-    text conn, resp
+    text(conn, resp)
   end
 
   def validate(conn, ~m(slug)) do
     resp =
       case AirtableCache.get_all().listings[slug] do
-        ~m(api_key reference_name system) ->
+        ~m(api_key system) ->
           configuration = AirtableCache.get_all().configurations[slug]
           result = CallSync.Verification.verify(configuration, api_key, system)
 
           header_message =
             case result
-              |> Enum.flat_map(& &1)
-              |> Enum.filter(&match?({:error, _}, &1))
-              |> length() do
-                0 -> "This sync is good to go!"
-                _ -> "THIS SYNC HAS ERRORS!!!!"
+                 |> Enum.flat_map(& &1)
+                 |> Enum.filter(&match?({:error, _}, &1))
+                 |> length() do
+              0 -> "This sync is good to go!"
+              _ -> "THIS SYNC HAS ERRORS!!!!"
             end
 
           row_results = Enum.zip(configuration, result)
-          contents = Enum.map(row_results, fn {{full_on_screen, _}, validity} ->
-            row_contents = Enum.map(validity, fn
-              {:ok, msg} -> ~s(
+
+          contents =
+            Enum.map(row_results, fn {{full_on_screen, _}, validity} ->
+              row_contents =
+                Enum.map(validity, fn
+                  {:ok, msg} -> ~s(
                 #{msg}
               )
-              {:error, msg} -> ~s(
+                  {:error, msg} -> ~s(
                 !!!ERROR!!!: #{msg}
               )
-            end) |> Enum.join("")
+                end)
+                |> Enum.join("")
 
-            ~s(
+              ~s(
               #{full_on_screen} ---->>>>
 
               #{row_contents}
             )
-          end)
+            end)
 
           ~s(
             #{header_message}
@@ -154,15 +163,15 @@ defmodule CallSync.IndexController do
             #{contents}
           )
 
-      _no_match ->
-        options =
-          AirtableCache.get_all()
-          |> Enum.map(fn {slug, _} -> slug end)
-          |> Enum.join(", ")
+        _no_match ->
+          options =
+            AirtableCache.get_all()
+            |> Enum.map(fn {slug, _} -> slug end)
+            |> Enum.join(", ")
 
-        ~s(that was an invalid integration reference name – try one of #{options})
+          ~s(that was an invalid integration reference name – try one of #{options})
       end
 
-    text conn, resp
+    text(conn, resp)
   end
 end

@@ -53,32 +53,6 @@ Any questions? Just reply to this email and it will go to Ben (programmer person
   def format_text(
         ~m(reference_name system),
         "full",
-        ~m(aggregated_results success_count error_count total),
-        day
-      ) do
-    results =
-      Enum.map(aggregated_results, fn {key, count} ->
-        ~s(\t\t#{key}\t=>\t#{count})
-      end)
-      |> Enum.join("\n")
-
-    ~s[
-Hello! Hope you're having a good morning.
-
-Your dialer results for #{reference_name} on #{day} have been processed and uploaded to #{system}.
-
-Here's a breakdown of your results for the day:
-#{results}
-
-We successfully synced #{success_count}, and there were #{error_count} errors.
-
-Any questions? Just reply to this email and it will go to Ben (programmer person at JD).
-]
-  end
-
-  def format_text(
-        ~m(reference_name system),
-        "full",
         ~m(aggregated_results success_count error_count),
         day
       ) do

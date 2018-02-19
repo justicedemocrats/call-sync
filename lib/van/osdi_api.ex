@@ -57,7 +57,7 @@ defmodule Van.Osdi.Api do
   end
 
   def enclose_unfolder(url, opts) do
-    fn result = %{"total_pages" => tps, "page" => p, "_embedded" => docs} ->
+    fn %{"total_pages" => tps, "page" => p, "_embedded" => docs} ->
       key_name =
         Map.keys(docs)
         |> Enum.filter(&String.contains?(&1, "osdi:"))
