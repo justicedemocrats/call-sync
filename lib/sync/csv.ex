@@ -138,7 +138,7 @@ defmodule Sync.Csv do
       Map.update(acc, g, 1, &(&1 + 1))
     end)
     |> Map.drop(~w(Result))
-    |> Enum.into(zeros)
+    # |> Enum.into(zeros)
     |> Enum.map(fn tuple -> tuple end)
     |> Enum.sort_by(fn {key, _val} -> key end)
   end

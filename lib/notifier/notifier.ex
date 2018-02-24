@@ -13,8 +13,10 @@ defmodule Notifier do
 
     ~m(aggregated_results) = data
 
+    zero_results? = Enum.into(aggregated_results, %{}) |> Map.values() |> Enum.sum() == 0
+
     text =
-      if length(aggregated_results) == 0 do
+      if zero_results? do
         zero_message(config)
       else
         format_text(config, type, data, day)

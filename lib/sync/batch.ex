@@ -176,7 +176,7 @@ defmodule Sync.Batch do
       result = config[full_on_screen_result]["display_name"] || full_on_screen_result
       Map.update(acc, result, 1, &(&1 + 1))
     end)
-    |> Enum.into(zeros)
+    # |> Enum.into(zeros)
     |> Enum.map(fn tuple -> tuple end)
     |> Enum.sort_by(fn {_key, val} -> val end)
   end
