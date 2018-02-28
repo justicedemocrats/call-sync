@@ -37,7 +37,7 @@ defmodule CallSync.AirtableCache do
 
     configurations =
       Enum.map(listings, fn {slug, ~m(reference_name)} ->
-        config = reference_name |> IO.inspect() |> fetch_all() |> process_configuration()
+        config = reference_name |> fetch_all() |> process_configuration()
         {slug, config}
       end)
       |> Enum.into(%{})
