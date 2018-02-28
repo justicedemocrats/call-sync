@@ -51,7 +51,8 @@ config :call_sync,
   second_zapier_hook_url: "${SECOND_ZAPIER_HOOK_URL}"
 
 config :ex_aws,
-  access_key_id: ["${AWS_ACCESS_KEY_ID}", :instance_role],
-  secret_access_key: ["${AWS_SECRET_ACCESS_KEY}", :instance_role]
+  access_key_id: "${AWS_ACCESS_KEY_ID}",
+  secret_access_key: "${AWS_SECRET_ACCESS_KEY}",
+  region: "${AWS_BUCKET_REGION}"
 
 config :call_sync, application_name: "${VAN_APP_NAME}"
