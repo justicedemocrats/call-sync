@@ -37,7 +37,7 @@ defmodule CallSync.AirtableCache do
 
     configurations =
       Enum.map(listings, fn {slug, ~m(reference_name)} ->
-        config = reference_name |> fetch_all() |> process_configuration()
+        config = reference_name |> IO.inspect() |> fetch_all() |> process_configuration()
         {slug, config}
       end)
       |> Enum.into(%{})
@@ -65,7 +65,7 @@ defmodule CallSync.AirtableCache do
   defp fetch_all(for_table, records, offset) do
     %{body: body} =
       HTTPotion.get(
-        "https://api.airtable.com/v0/#{base()}/#{for_table}",
+        "https://api.airtable.com/v0/#{base()}/#{URI.encode(for_table)}",
         headers: [
           Authorization: "Bearer #{key()}"
         ],

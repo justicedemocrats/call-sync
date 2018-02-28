@@ -120,7 +120,7 @@ Any questions? Just reply to this email and it will go to Ben (programmer person
 
   def combine_results(~m(aggregated_results csv_aggregated_results total csv_total)) do
     aggregated_results = Enum.into(aggregated_results, %{})
-    csv_aggregated_results = Enum.into(csv_aggregated_results, %{})
+    csv_aggregated_results = Enum.into(csv_aggregated_results || [], %{})
 
     full_aggregation =
       Enum.concat(Map.keys(aggregated_results), Map.keys(csv_aggregated_results))

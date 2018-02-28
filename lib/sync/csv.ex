@@ -14,7 +14,8 @@ defmodule Sync.Csv do
     results =
       results_stream
       |> Stream.with_index()
-      |> Flow.from_enumerable(min_demand: 50, max_demand: 100)
+      # |> Flow.from_enumerable(min_demand: 50, max_demand: 100)
+      |> Flow.from_enumerable(min_demand: 25, max_demand: 50)
       |> Flow.filter(fn {call, idx} -> {should_sync(call, config), idx} end)
       |> Flow.map(fn {call, idx} ->
         if rem(idx, @print_interval) == 0 do
