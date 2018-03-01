@@ -88,7 +88,7 @@ defmodule Sync.Info do
   end
 
   def within_24_hours do
-    ago = Timex.shift(Timex.now(), hours: -24)
+    ago = Timex.shift(Timex.now(), hours: -48)
     up_to = Timex.shift(Timex.now(), hours: -2)
     # ago = Timex.shift(Timex.now(), hours: -24)
     %{"timestamp" => %{"$gt" => ago, "$lt" => up_to}}
