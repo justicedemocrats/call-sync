@@ -174,4 +174,13 @@ defmodule CallSync.IndexController do
 
     text(conn, resp)
   end
+
+  def run(conn, ~m(slug)) do
+    spawn(fn -> Sync.sync_candidate(slug) end)
+
+    up_to = Timex.shift(Timex.now("America/New_York"), hours: -0) |> DateTime.to_iso8601()
+    ago = Timex.shift(Timex.now("America/New_York"), hours: -24) |> DateTime.to_iso8601()
+
+    text(conn, "Queued a sync of results from #{ago} to #{up_to}")
+  end
 end

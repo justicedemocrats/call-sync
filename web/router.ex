@@ -6,10 +6,11 @@ defmodule CallSync.Router do
   end
 
   scope "/", CallSync do
-    pipe_through :main
+    pipe_through(:main)
 
     get("/", IndexController, :index)
     get("/configure/:slug", IndexController, :configure_lookup)
     get("/validate/:slug", IndexController, :validate)
+    get("/run/:slug", IndexController, :run)
   end
 end

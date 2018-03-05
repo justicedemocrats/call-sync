@@ -49,15 +49,28 @@ defmodule Sync.Batch do
   end
 
   def fetch_sync_batch_for(service_names) do
-    Db.find(
-      "calls",
+    query =
       Sync.Info.within_24_hours()
       |> Map.merge(%{"sync_status" => %{"$exists" => false}})
-      |> Map.merge(%{"service_name" => %{"$in" => service_names}}),
-      sort: %{"timestamp" => 1},
-      limit: @batch_size
-    )
-    |> Enum.to_list()
+      |> Map.merge(%{"service_name" => %{"$in" => service_names}})
+
+    [batch, {:ok, count}] =
+      [
+        Task.async(fn ->
+          Db.find(
+            "calls",
+            query,
+            sort: %{"timestamp" => 1},
+            limit: @batch_size
+          )
+          |> Enum.to_list()
+        end),
+        Task.async(fn -> Db.count("calls", query) end)
+      ]
+      |> Enum.map(&Task.await/1)
+
+    Logger.info("#{count} left")
+    batch
   end
 
   # --------------------- --------------------- ---------------------

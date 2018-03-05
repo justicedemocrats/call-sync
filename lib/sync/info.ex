@@ -6,7 +6,8 @@ defmodule Sync.Info do
       Livevox.Api.post(
         "contact/v6.0/contacts/search",
         body: %{"filter" => %{"phone" => phone_dialed}},
-        query: %{"count" => 100, "offset" => 0}
+        query: %{"count" => 100, "offset" => 0},
+        timeout: 20_000
       )
 
     process_matches(matches)
@@ -17,7 +18,8 @@ defmodule Sync.Info do
       Livevox.Api.post(
         "contact/v6.0/contacts/search",
         body: %{"filter" => %{"phone" => phone_dialed}},
-        query: %{"count" => 100, "offset" => 0}
+        query: %{"count" => 100, "offset" => 0},
+        timeout: 20_000
       )
 
     process_matches(matches)
@@ -89,7 +91,7 @@ defmodule Sync.Info do
 
   def within_24_hours do
     # ago = Timex.shift(Timex.now(), hours: -48)
-    up_to = Timex.shift(Timex.now(), hours: -2)
+    up_to = Timex.shift(Timex.now(), hours: -0)
     ago = Timex.shift(Timex.now(), hours: -24)
     %{"timestamp" => %{"$gt" => ago, "$lt" => up_to}}
   end
