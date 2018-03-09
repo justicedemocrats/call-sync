@@ -27,7 +27,12 @@ defmodule Notifier do
     HTTPotion.post(second_zap_url(), body: Poison.encode!(combine_results(data)))
   end
 
-  def format_text(~m(reference_name), "all csv", ~m(file_url aggregated_results total), day) do
+  def format_text(
+        ~m(reference_name),
+        "all csv",
+        ~m(file_url aggregated_results total agent_count agent_file_url),
+        day
+      ) do
     results =
       Enum.map(aggregated_results, fn {key, count} ->
         ~s(\t\t#{String.pad_trailing(key, 10)}\t=>\t#{
@@ -48,6 +53,8 @@ Note that this link will expire after 2 days for security reasons, so please dow
 Here's a breakdown of your #{total} total results for the day:
 #{results}
 
+You had #{agent_count} callers. You can download their contact information at #{agent_file_url}.
+
 Any questions? Just reply to this email and it will go to Ben (programmer person at JD).
 ]
   end
@@ -55,7 +62,7 @@ Any questions? Just reply to this email and it will go to Ben (programmer person
   def format_text(
         ~m(reference_name system),
         "full",
-        ~m(aggregated_results success_count error_count),
+        ~m(aggregated_results success_count error_count agent_count agent_file_url),
         day
       ) do
     results =
@@ -74,6 +81,8 @@ Here's a breakdown of your results for the day:
 
 We successfully synced #{success_count}, and there were #{error_count} errors.
 
+You had #{agent_count} callers. You can download their contact information at #{agent_file_url}.
+
 Any questions? Just reply to this email and it will go to Ben (programmer person at JD).
 ]
   end
@@ -81,7 +90,7 @@ Any questions? Just reply to this email and it will go to Ben (programmer person
   def format_text(
         ~m(reference_name system),
         "hybrid",
-        ~m(aggregated_results success_count error_count file_url),
+        ~m(aggregated_results success_count error_count file_url agent_count agent_file_url),
         day
       ) do
     results =
@@ -102,6 +111,8 @@ We successfully synced #{success_count}, and there were #{error_count} errors.
 
 To save you money, some of the results were not synced to your VAN. You can
 download the unsynced results here: #{file_url}.
+
+You had #{agent_count} callers. You can download their contact information at #{agent_file_url}.
 
 Any questions? Just reply to this email and it will go to Ben (programmer person at JD).
 ]

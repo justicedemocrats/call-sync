@@ -98,7 +98,8 @@ defmodule CallSync.AirtableCache do
           "reference_name" => fields["Reference Name"],
           "strategy" => fields["Strategy"],
           "report_to" => fields["Send Report To"],
-          "sync_time" => fields["Sync Time (EST)"]
+          "sync_time" => fields["Sync Time (EST)"],
+          "client_name" => fields["Client Name"]
         }
       }
     end)

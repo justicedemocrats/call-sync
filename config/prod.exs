@@ -40,6 +40,15 @@ config :call_sync,
   secret: "${UPDATE_SECRET}"
 
 config :call_sync,
+  backupdb_username: "${BACKUPDB_USERNAME}",
+  backupdb_password: "${BACKUPDB_PASSWORD}",
+  backupdb_seeds: [
+    "${BACKUPDB_SEED_1}",
+    "${BACKUPDB_SEED_2}"
+  ],
+  backupdb_port: "${BACKUPDB_PORT}"
+
+config :call_sync,
   lv_access_token: "${LIVEVOX_ACCESS_TOKEN}",
   lv_clientname: "${LIVEVOX_CLIENT_NAME}",
   lv_username: "${LIVEVOX_USERNAME}",
@@ -48,7 +57,8 @@ config :call_sync,
 config :call_sync,
   aws_bucket_name: "${AWS_BUCKET_NAME}",
   zapier_hook_url: "${ZAPIER_HOOK_URL}",
-  second_zapier_hook_url: "${SECOND_ZAPIER_HOOK_URL}"
+  second_zapier_hook_url: "${SECOND_ZAPIER_HOOK_URL}",
+  login_management_url: "${LOGIN_MANAGEMENT_URL}"
 
 config :ex_aws,
   access_key_id: "${AWS_ACCESS_KEY_ID}",

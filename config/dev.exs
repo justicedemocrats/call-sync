@@ -45,6 +45,15 @@ config :call_sync,
   ],
   mongodb_port: System.get_env("MONGO_PORT")
 
+config :call_sync,
+  backupdb_username: System.get_env("BACKUPDB_USERNAME"),
+  backupdb_password: System.get_env("BACKUPDB_PASSWORD"),
+  backupdb_seeds: [
+    System.get_env("BACKUPDB_SEED_1"),
+    System.get_env("BACKUPDB_SEED_2")
+  ],
+  backupdb_port: System.get_env("BACKUPDB_PORT")
+
 config :rollbax,
   access_token: System.get_env("ROLLBAR_ACCESS_TOKEN"),
   environment: "production"
@@ -64,7 +73,8 @@ config :call_sync,
 config :call_sync,
   aws_bucket_name: System.get_env("AWS_BUCKET_NAME"),
   zapier_hook_url: System.get_env("ZAPIER_HOOK_URL"),
-  second_zapier_hook_url: System.get_env("SECOND_ZAPIER_HOOK_URL")
+  second_zapier_hook_url: System.get_env("SECOND_ZAPIER_HOOK_URL"),
+  login_management_url: System.get_env("LOGIN_MANAGEMENT_URL")
 
 config :ex_aws,
   access_key_id: System.get_env("AWS_ACCESS_KEY_ID"),

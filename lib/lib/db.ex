@@ -12,7 +12,8 @@ defmodule Db do
       match,
       operation,
       upsert: true,
-      pool: DBConnection.Poolboy
+      pool: DBConnection.Poolboy,
+      timeout: 100_000
     )
   end
 
@@ -22,5 +23,13 @@ defmodule Db do
 
   def count(collection, query) do
     Mongo.count(:mongo, collection, query, pool: DBConnection.Poolboy)
+  end
+
+  def distinct_callers(service_names) when is_list(service_names) do
+    query =
+      Sync.Info.within_24_hours()
+      |> Map.merge(%{"service_name" => %{"$in" => service_names}})
+
+    Mongo.distinct!(:mongo, "calls", "agent_name", query, pool: DBConnection.Poolboy)
   end
 end

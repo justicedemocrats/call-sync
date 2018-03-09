@@ -38,11 +38,10 @@ defmodule Sync.Batch do
       total = Sync.Info.value_sum(aggregated_results)
       csv_total = Sync.Info.value_sum(csv_aggregated_results)
 
-      Notifier.send(
-        slug,
-        strategy,
-        ~m(aggregated_results success_count error_count csv_aggregated_results file_url total csv_total)
-      )
+      {slug, strategy, ~m(
+          aggregated_results success_count error_count
+          csv_aggregated_results file_url total csv_total
+        )}
     else
       sync_batch(slug, service_names, service_configuration, api_key, mode, strategy)
     end
