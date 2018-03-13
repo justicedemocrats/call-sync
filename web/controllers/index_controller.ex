@@ -30,7 +30,7 @@ defmodule CallSync.IndexController do
               response_strings =
                 responses
                 |> Enum.map(fn ~m(key title) -> ~s(
-                  #{key} -> #{title}
+                  #{Help.extract_id(question)},#{key} -> #{title}
                 ) end)
                 |> Enum.join("")
 

@@ -146,7 +146,6 @@ defmodule CallSync.AirtableCache do
        ~m(success result_code tags qr_pairs display_name should_sync csv_only)}
     end)
     |> Enum.filter(fn {_, ~m(should_sync csv_only)} -> should_sync == true or csv_only == true end)
-    # |> Enum.map(fn {key, map} -> {key, Map.drop(map, ~w(should_sync))} end)
     |> Enum.into(%{})
   end
 

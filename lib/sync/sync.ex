@@ -41,7 +41,8 @@ defmodule Sync do
 
     listings
     |> Enum.filter(fn {_slug, entry} -> entry["active"] == true end)
-    # |> Enum.slice(20..200)
+    |> Enum.sort()
+    # |> Enum.slice(6..200)
     |> Enum.map(fn {slug, _} ->
       Logger.info("Starting sync for #{slug}")
       sync_candidate(slug)

@@ -65,7 +65,12 @@ defmodule Sync.Csv do
   end
 
   def should_sync(~m(full_on_screen_result), config) do
-    Map.has_key?(config, full_on_screen_result)
+    if Map.has_key?(config, full_on_screen_result) do
+      true
+    else
+      IO.puts(full_on_screen_result)
+      false
+    end
   end
 
   def convert_to_row(

@@ -11,4 +11,14 @@ defmodule Sync.Reset do
       %{"$unset" => %{"sync_status" => 1}}
     )
   end
+
+  def count_candidate(slug) do
+    ~m(service_names) = CallSync.AirtableCache.get_all().listings[slug]
+
+    Db.count(
+      "calls",
+      Sync.Info.within_24_hours()
+      |> Map.merge(%{"service_name" => %{"$in" => service_names}})
+    )
+  end
 end
