@@ -13,7 +13,7 @@ defmodule Db do
       operation,
       upsert: true,
       pool: DBConnection.Poolboy,
-      timeout: 100_000
+      timeout: 100_000_000
     )
   end
 
