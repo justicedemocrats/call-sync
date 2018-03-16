@@ -19,8 +19,8 @@ config :logger, :console,
 
 config :call_sync, CallSync.Scheduler,
   jobs: [
-    {"*/5 * * * *", {CallSync.AirtableCache, :update, []}}
-    # {"5 * * * * *", {Sync, :sync_current_iteration, []}}
+    {"*/5 * * * *", {CallSync.AirtableCache, :update, []}},
+    {"5 * * * * *", {Sync, :sync_current_iteration, []}}
   ]
 
 # Import environment specific config. This must remain at the bottom
