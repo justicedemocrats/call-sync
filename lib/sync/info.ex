@@ -1,5 +1,6 @@
 defmodule Sync.Info do
   import ShortMaps
+  require Logger
 
   @max_attempts 3
   @sleep_period 500
@@ -26,7 +27,7 @@ defmodule Sync.Info do
     rescue
       e ->
         if attempt < @max_attempts do
-          IO.puts("Retrying – attempt #{attempt + 1}")
+          Logger.info("Retrying – attempt #{attempt + 1}")
           :timer.sleep(@sleep_period)
           do_fetch_voter_id(phone_dialed, attempt + 1)
         else

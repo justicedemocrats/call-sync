@@ -69,7 +69,7 @@ defmodule Sync.Csv do
     if Map.has_key?(config, full_on_screen_result) do
       true
     else
-      IO.puts(full_on_screen_result)
+      Logger.info("Did not handle: #{full_on_screen_result}")
       false
     end
   end
