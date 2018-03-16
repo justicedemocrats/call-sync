@@ -19,7 +19,7 @@ config :logger, :console,
 
 config :call_sync, CallSync.Scheduler,
   jobs: [
-    {"*/5 * * * *", {CallSync.AirtableCache, :update, []}},
+    {"*/8 * * * *", {CallSync.AirtableCache, :update, []}},
     {"3 * * * * *", {Sync, :sync_current_iteration, []}}
   ]
 
