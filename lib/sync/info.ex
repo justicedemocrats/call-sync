@@ -2,8 +2,8 @@ defmodule Sync.Info do
   import ShortMaps
   require Logger
 
-  @max_attempts 3
-  @sleep_period 500
+  @max_attempts 5
+  @sleep_period 1_000
 
   def fetch_voter_id(phone_dialed) when is_binary(phone_dialed) do
     fetch_voter_id(~m(phone_dialed))
@@ -103,7 +103,7 @@ defmodule Sync.Info do
   def within_24_hours do
     # ago = Timex.shift(Timex.now(), hours: -48)
     up_to = Timex.shift(Timex.now(), hours: -0)
-    ago = Timex.shift(Timex.now(), hours: -24)
+    ago = Timex.shift(Timex.now(), hours: -48)
     %{"timestamp" => %{"$gt" => ago, "$lt" => up_to}}
   end
 
