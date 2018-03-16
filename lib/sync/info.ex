@@ -1,28 +1,38 @@
 defmodule Sync.Info do
   import ShortMaps
 
-  def fetch_voter_id(phone_dialed) when is_binary(phone_dialed) do
-    %{body: %{"findMatchingContactsDetails" => matches}} =
-      Livevox.Api.post(
-        "contact/v6.0/contacts/search",
-        body: %{"filter" => %{"phone" => phone_dialed}},
-        query: %{"count" => 100, "offset" => 0},
-        timeout: 20_000
-      )
+  @max_attempts 3
+  @sleep_period 500
 
-    process_matches(matches)
+  def fetch_voter_id(phone_dialed) when is_binary(phone_dialed) do
+    fetch_voter_id(~m(phone_dialed))
   end
 
   def fetch_voter_id(~m(phone_dialed)) do
-    %{body: %{"findMatchingContactsDetails" => matches}} =
-      Livevox.Api.post(
-        "contact/v6.0/contacts/search",
-        body: %{"filter" => %{"phone" => phone_dialed}},
-        query: %{"count" => 100, "offset" => 0},
-        timeout: 20_000
-      )
+    do_fetch_voter_id(phone_dialed, 1)
+  end
 
-    process_matches(matches)
+  def do_fetch_voter_id(phone_dialed, attempt) do
+    try do
+      %{body: %{"findMatchingContactsDetails" => matches}} =
+        Livevox.Api.post(
+          "contact/v6.0/contacts/search",
+          body: %{"filter" => %{"phone" => phone_dialed}},
+          query: %{"count" => 100, "offset" => 0},
+          timeout: 20_000
+        )
+
+      process_matches(matches)
+    rescue
+      e ->
+        if attempt < @max_attempts do
+          IO.puts("Retrying – attempt #{attempt + 1}")
+          :timer.sleep(@sleep_period)
+          do_fetch_voter_id(phone_dialed, attempt + 1)
+        else
+          throw(e)
+        end
+    end
   end
 
   @doc ~S"""

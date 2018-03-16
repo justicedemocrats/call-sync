@@ -5,6 +5,7 @@ defmodule Sync.Csv do
   alias NimbleCSV.RFC4180, as: CSV
 
   @print_interval 100
+  @update_chunk_size 500
 
   def bucket_name, do: Application.get_env(:call_sync, :aws_bucket_name)
 
@@ -100,9 +101,12 @@ defmodule Sync.Csv do
     synced_at = DateTime.utc_now()
     receipt = file_url
 
-    Db.update("calls", %{"id" => %{"$in" => ids}}, %{
-      "$set" => ~m(sync_status synced_at receipt)
-    })
+    Enum.chunk_every(ids, @update_chunk_size)
+    |> Enum.each(fn chunk ->
+      Db.update("calls", %{"id" => %{"$in" => chunk}}, %{
+        "$set" => ~m(sync_status synced_at receipt)
+      })
+    end)
   end
 
   def write_to_temp_file(rows, file_name) do
