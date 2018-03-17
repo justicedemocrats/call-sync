@@ -12,6 +12,7 @@ defmodule Sync do
 
     CallSync.AirtableCache.get_all().listings
     |> Enum.filter(fn {_slug, config} -> is_queued(config, now, before) end)
+    |> Enum.sort()
     |> Enum.map(fn {slug, _} ->
       Logger.info("Starting sync for #{slug}")
       sync_candidate(slug)
@@ -42,7 +43,7 @@ defmodule Sync do
     listings
     |> Enum.filter(fn {_slug, entry} -> entry["active"] == true end)
     |> Enum.sort()
-    # |> Enum.slice(6..200)
+    # |> Enum.slice(7..200)
     |> Enum.map(fn {slug, _} ->
       Logger.info("Starting sync for #{slug}")
       sync_candidate(slug)

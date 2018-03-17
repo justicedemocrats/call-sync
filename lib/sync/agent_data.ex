@@ -2,7 +2,7 @@ defmodule Sync.AgentData do
   require Logger
 
   @max_attempts 5
-  @sleep_period 1_000
+  @sleep_period 2_000
 
   def login_management_url, do: Application.get_env(:call_sync, :login_management_url)
 

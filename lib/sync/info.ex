@@ -3,7 +3,7 @@ defmodule Sync.Info do
   require Logger
 
   @max_attempts 5
-  @sleep_period 1_000
+  @sleep_period 2_000
 
   def fetch_voter_id(phone_dialed) when is_binary(phone_dialed) do
     fetch_voter_id(~m(phone_dialed))
