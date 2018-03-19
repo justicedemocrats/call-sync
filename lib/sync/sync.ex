@@ -11,6 +11,7 @@ defmodule Sync do
     before = Timex.now() |> Timex.shift(minutes: -30)
 
     CallSync.AirtableCache.get_all().listings
+    |> Enum.filter(fn {_slug, entry} -> entry["active"] == true end)
     |> Enum.filter(fn {_slug, config} -> is_queued(config, now, before) end)
     |> Enum.sort()
     |> Enum.map(fn {slug, _} ->
@@ -43,7 +44,7 @@ defmodule Sync do
     listings
     |> Enum.filter(fn {_slug, entry} -> entry["active"] == true end)
     |> Enum.sort()
-    # |> Enum.slice(7..200)
+    # |> Enum.slice(2..200)
     |> Enum.map(fn {slug, _} ->
       Logger.info("Starting sync for #{slug}")
       sync_candidate(slug)
