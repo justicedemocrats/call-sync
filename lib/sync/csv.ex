@@ -9,7 +9,7 @@ defmodule Sync.Csv do
 
   def bucket_name, do: Application.get_env(:call_sync, :aws_bucket_name)
 
-  def result_stream_to_csv(results_stream, slug, config) do
+  def result_stream_to_csv(results_stream, slug, config, progress_fn) do
     Logger.info("Starting processing...")
 
     results =
@@ -21,6 +21,7 @@ defmodule Sync.Csv do
       |> Flow.map(fn {call, idx} ->
         if rem(idx, @print_interval) == 0 do
           Logger.info("Doing #{idx}")
+          progress_fn.(idx)
         end
 
         convert_to_row(call, config)

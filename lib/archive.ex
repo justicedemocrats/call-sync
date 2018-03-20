@@ -2,7 +2,7 @@ defmodule Archive do
   require Logger
   import ShortMaps
 
-  @archive_shift [days: -7]
+  @archive_shift [days: -2]
   @print_interval 100
   @chunk_size 100
 

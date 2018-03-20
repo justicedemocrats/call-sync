@@ -19,7 +19,9 @@ defmodule CallSync do
           pool: DBConnection.Poolboy
         ]
       ]),
-      worker(CallSync.Scheduler, [])
+      worker(CallSync.Scheduler, []),
+      Honeydew.queue_spec(:queue),
+      Honeydew.worker_spec(:queue, Sync.Worker, num: 1)
     ]
 
     opts = [strategy: :one_for_one, name: CallSync.Supervisor]

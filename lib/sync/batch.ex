@@ -10,7 +10,16 @@ defmodule Sync.Batch do
   #   -> send off the report
   # Otherwise
   #   -> recurse!
-  def sync_batch(slug, service_names, service_configuration, api_key, mode, strategy) do
+  def sync_batch(
+        slug,
+        service_names,
+        service_configuration,
+        api_key,
+        mode,
+        strategy,
+        progress_fn,
+        done \\ 0
+      ) do
     Logger.info("Doing batch")
 
     batch_done =
@@ -18,6 +27,7 @@ defmodule Sync.Batch do
       |> Enum.map(fn call -> task_sync_call(call, service_configuration, api_key, mode) end)
       |> Enum.map(fn t -> Task.await(t, 30_000) end)
 
+    progress_fn.(done + @batch_size)
     Logger.info("Did batch")
 
     if length(batch_done) == 0 do
@@ -43,7 +53,16 @@ defmodule Sync.Batch do
           csv_aggregated_results file_url total csv_total
         )}
     else
-      sync_batch(slug, service_names, service_configuration, api_key, mode, strategy)
+      sync_batch(
+        slug,
+        service_names,
+        service_configuration,
+        api_key,
+        mode,
+        strategy,
+        progress_fn,
+        done + @batch_size
+      )
     end
   end
 
@@ -229,6 +248,6 @@ defmodule Sync.Batch do
       |> Map.merge(%{"sync_status" => "queued_for_csv"})
       |> Map.merge(%{"service_name" => %{"$in" => service_names}})
     )
-    |> Sync.Csv.result_stream_to_csv(slug, service_configuration)
+    |> Sync.Csv.result_stream_to_csv(slug, service_configuration, & &1)
   end
 end

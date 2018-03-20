@@ -2,8 +2,6 @@ defmodule Sync do
   import ShortMaps
   require Logger
 
-  def login_management_url, do: Application.get_env(:call_sync, :login_management_url)
-
   def sync_current_iteration do
     Logger.info("It's 5 after! Checking who to sync.")
 
@@ -16,7 +14,20 @@ defmodule Sync do
     |> Enum.sort()
     |> Enum.map(fn {slug, _} ->
       Logger.info("Starting sync for #{slug}")
-      sync_candidate(slug)
+      Honeydew.async({:sync_candidate, [slug]}, :queue)
+    end)
+  end
+
+  def sync_all do
+    listings = CallSync.AirtableCache.get_all().listings
+
+    listings
+    |> Enum.filter(fn {_slug, entry} -> entry["active"] == true end)
+    |> Enum.sort()
+    # |> Enum.slice(2..200)
+    |> Enum.map(fn {slug, _} ->
+      Logger.info("Starting sync for #{slug}")
+      Honeydew.async({:sync_candidate, [slug]}, :queue)
     end)
   end
 
@@ -36,51 +47,5 @@ defmodule Sync do
       true ->
         true
     end
-  end
-
-  def sync_all do
-    listings = CallSync.AirtableCache.get_all().listings
-
-    listings
-    |> Enum.filter(fn {_slug, entry} -> entry["active"] == true end)
-    |> Enum.sort()
-    # |> Enum.slice(2..200)
-    |> Enum.map(fn {slug, _} ->
-      Logger.info("Starting sync for #{slug}")
-      sync_candidate(slug)
-    end)
-  end
-
-  def sync_candidate(slug) do
-    service_configuration = CallSync.AirtableCache.get_all().configurations[slug]
-
-    listing_configuration =
-      ~m(service_names client_name) = CallSync.AirtableCache.get_all().listings[slug]
-
-    {slug, strategy, data} =
-      case listing_configuration do
-        %{"system" => "csv"} ->
-          Sync.Bulk.sync_bulk(slug, service_names, service_configuration)
-
-        %{"strategy" => "all csv"} ->
-          Sync.Bulk.sync_bulk(slug, service_names, service_configuration)
-
-        ~m(system api_key service_names strategy) ->
-          Sync.Batch.sync_batch(
-            slug,
-            service_names,
-            service_configuration,
-            api_key,
-            system,
-            strategy
-          )
-      end
-
-    rows = Sync.AgentData.from(client_name, service_names)
-    {agent_file_url, agent_count} = Sync.AgentData.upload_file(slug, rows)
-
-    Notifier.send(slug, strategy, Map.merge(data, ~m(agent_file_url agent_count)))
-
-    Logger.info("Done!")
   end
 end

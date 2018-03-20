@@ -6,7 +6,24 @@ defmodule CallSync.IndexController do
   def index(conn, _) do
     text(conn, ~s(
       ENDPOINTS:
+        /status
         /configure/:integration-name
+        /validate/:integration-name
+    ))
+  end
+
+  def status(conn, _) do
+    queued_text =
+      get_queue()
+      |> Enum.map(fn job ->
+        ~s[
+          #{job.task} -> #{job.status.status} (#{job.status.progress} processed)]
+      end)
+      |> Enum.join("\n")
+
+    text(conn, ~s(
+      QUEUD REPORTS:
+        #{queued_text}
     ))
   end
 
@@ -176,11 +193,47 @@ defmodule CallSync.IndexController do
   end
 
   def run(conn, ~m(slug)) do
-    spawn(fn -> Sync.sync_candidate(slug) end)
+    Honeydew.async(:sync_candidate, [slug], :queue)
 
     up_to = Timex.shift(Timex.now("America/New_York"), hours: -0) |> DateTime.to_iso8601()
     ago = Timex.shift(Timex.now("America/New_York"), hours: -24) |> DateTime.to_iso8601()
 
     text(conn, "Queued a sync of results from #{ago} to #{up_to}")
+  end
+
+  def get_queue do
+    {{waiting, up_next}, _running} = Honeydew.state(:queue) |> List.first() |> Map.get(:private)
+
+    running =
+      Honeydew.status(:queue)
+      |> Map.get(:workers)
+      |> Map.values()
+      |> Enum.filter(&(&1 != nil))
+      |> Enum.map(fn worker ->
+        {task, status} = worker
+        %{task: extract_task(task), status: extract_status(status)}
+      end)
+
+    Enum.concat(
+      running,
+      Enum.concat(waiting, up_next)
+      |> Enum.map(fn job ->
+        %{task: extract_task(job), status: %{status: "waiting", progress: 0}}
+      end)
+    )
+  end
+
+  def extract_task(%{task: {_, [candidate]}}) do
+    candidate
+  end
+
+  def extract_status({status, progress}) do
+    status = Atom.to_string(status)
+    ~m(status progress)a
+  end
+
+  def extract_status(status) do
+    progress = 0
+    ~m(status progress)a
   end
 end

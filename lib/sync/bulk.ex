@@ -1,11 +1,11 @@
 defmodule Sync.Bulk do
   import ShortMaps
 
-  def sync_bulk(slug, service_names, config) do
+  def sync_bulk(slug, service_names, config, progress_fn) do
     bulk_results_stream = stream_all_unsynced(service_names)
 
     ~m(file_url aggregated_results) =
-      Sync.Csv.result_stream_to_csv(bulk_results_stream, slug, config)
+      Sync.Csv.result_stream_to_csv(bulk_results_stream, slug, config, progress_fn)
 
     total = Sync.Info.value_sum(aggregated_results)
     {slug, "all csv", ~m(file_url aggregated_results total)}
