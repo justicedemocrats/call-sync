@@ -10,8 +10,11 @@ defmodule Sync.Worker do
       ~m(service_names client_name) = CallSync.AirtableCache.get_all().listings[slug]
 
     Logger.info("Starting #{slug}")
-    :timer.sleep(100_000)
-    progress_fn = fn num -> progress(num) end
+    monitor = Process.get(:monitor)
+
+    progress_fn = fn num ->
+      :ok = GenServer.call(monitor, {:progress, num})
+    end
 
     {slug, strategy, data} =
       case listing_configuration do
