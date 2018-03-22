@@ -133,7 +133,9 @@ defmodule Sync.Batch do
   end
 
   def configure_body(call = ~m(full_on_screen_result), config) do
-    if Map.has_key?(config, full_on_screen_result) do
+    fosr = String.trim(full_on_screen_result)
+
+    if Map.has_key?(config, fosr) do
       do_configure_body(call, config)
     else
       sync_status = "unattempted_error"
@@ -144,7 +146,7 @@ defmodule Sync.Batch do
   end
 
   def do_configure_body(call, configuration) do
-    key = call["full_on_screen_result"]
+    key = String.trim(call["full_on_screen_result"])
     result_map = configuration[key]
 
     status_code = Map.get(result_map, "result_code")

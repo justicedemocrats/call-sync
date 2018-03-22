@@ -27,7 +27,7 @@ defmodule Sync do
     # |> Enum.slice(2..200)
     |> Enum.map(fn {slug, _} ->
       Logger.info("Starting sync for #{slug}")
-      Honeydew.async({:sync_candidate, [slug]}, :queue)
+      # Honeydew.async({:sync_candidate, [slug]}, :queue)
     end)
   end
 
