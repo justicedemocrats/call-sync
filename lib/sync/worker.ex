@@ -36,7 +36,7 @@ defmodule Sync.Worker do
           )
       end
 
-    rows = Sync.AgentData.from(client_name, service_names)
+    rows = Sync.AgentData.from(service_names)
     {agent_file_url, agent_count} = Sync.AgentData.upload_file(slug, rows)
 
     Notifier.send(slug, strategy, Map.merge(data, ~m(agent_file_url agent_count)))

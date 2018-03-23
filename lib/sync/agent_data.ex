@@ -6,21 +6,21 @@ defmodule Sync.AgentData do
 
   def login_management_url, do: Application.get_env(:call_sync, :login_management_url)
 
-  def from(client_name, service_names) do
+  def from(service_names) do
     agent_data =
       Db.distinct_callers(service_names)
       |> Stream.filter(&(&1 != nil and &1 != ""))
       |> Stream.map(fn agent ->
-        do_get_agent_data(client_name, agent, 1)
+        do_get_agent_data(agent, 1)
       end)
       |> Enum.to_list()
 
     Enum.concat([~w(Login Email Phone From)], agent_data)
   end
 
-  def do_get_agent_data(client_name, agent, attempt) do
+  def do_get_agent_data(agent, attempt) do
     try do
-      %{body: body} = HTTPotion.get(login_management_url() <> "/#{client_name}/#{agent}")
+      %{body: body} = HTTPotion.get(login_management_url() <> "/infer-client/#{agent}")
       attributes = Poison.decode!(body)
       Enum.map(~w(login email phone calling_from), &Map.get(attributes, &1))
     rescue
@@ -28,7 +28,7 @@ defmodule Sync.AgentData do
         if attempt < @max_attempts do
           Logger.info("Retrying – attempt #{attempt + 1}")
           :timer.sleep(@sleep_period)
-          do_get_agent_data(client_name, agent, attempt + 1)
+          do_get_agent_data(agent, attempt + 1)
         else
           ["", "", "", ""]
         end
