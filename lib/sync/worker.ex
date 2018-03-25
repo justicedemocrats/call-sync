@@ -6,8 +6,7 @@ defmodule Sync.Worker do
   def sync_candidate(slug) do
     service_configuration = CallSync.AirtableCache.get_all().configurations[slug]
 
-    listing_configuration =
-      ~m(service_names client_name) = CallSync.AirtableCache.get_all().listings[slug]
+    listing_configuration = ~m(service_names) = CallSync.AirtableCache.get_all().listings[slug]
 
     Logger.info("Starting #{slug}")
     monitor = Process.get(:monitor)
