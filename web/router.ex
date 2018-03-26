@@ -13,5 +13,7 @@ defmodule CallSync.Router do
     get("/configure/:slug", IndexController, :configure_lookup)
     get("/validate/:slug", IndexController, :validate)
     get("/run/:slug", IndexController, :run)
+    get("/drop-rate", IndexController, :drop_rate)
+    post("/drop-rate", IndexController, :drop_rate)
   end
 end

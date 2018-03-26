@@ -9,6 +9,8 @@ defmodule CallSync.IndexController do
         /status
         /configure/:integration-name
         /validate/:integration-name
+        /run/:integration-name
+        /drop-rate
     ))
   end
 
@@ -235,5 +237,86 @@ defmodule CallSync.IndexController do
   def extract_status(status) do
     progress = 0
     ~m(status progress)a
+  end
+
+  def drop_rate(conn, params) do
+    with {:ok, time_query} <- extract_time_query(params),
+         {:ok, service_query} <- extract_service_query(params),
+         {:ok, archive_conn} <- create_archive_conn() do
+      {:ok, total_contacts} =
+        Mongo.count(
+          archive_conn,
+          "calls",
+          %{"contact" => true}
+          |> Map.merge(time_query)
+          |> Map.merge(service_query),
+          timeout: 100_000
+        )
+
+      {:ok, total_drops} =
+        Mongo.count(
+          archive_conn,
+          "calls",
+          %{"dropped" => true}
+          |> Map.merge(time_query)
+          |> Map.merge(service_query),
+          timeout: 100_000
+        )
+
+      drop_rate =
+        case total_contacts do
+          0 -> "N/A"
+          _ -> total_drops / total_contacts
+        end
+
+      json(conn, ~m(drop_rate total_drops total_contacts))
+    else
+      {:error, message} -> send_resp(conn, 400, message)
+    end
+  end
+
+  def extract_time_query(~m(start_day count)) do
+    now = Timex.now("America/New_York")
+    start_datetime = Timex.parse!(start_day, "{D}-{M}")
+    {count, _} = Integer.parse(count)
+
+    start_datetime_est =
+      Timex.set(
+        now,
+        year: now.year,
+        day: start_datetime.day,
+        month: start_datetime.month,
+        hour: 0,
+        minute: 0,
+        second: 0
+      )
+
+    end_datetime_est = Timex.shift(start_datetime_est, days: count)
+    {:ok, %{"timestamp" => %{"$gt" => start_datetime_est, "$lt" => end_datetime_est}}}
+  end
+
+  def extract_time_query(_) do
+    {:error, "Bad request - proper usage is /drop-rate?start_day=02-18&count=7"}
+  end
+
+  def extract_service_query(~m(service_name)) do
+    {:ok, %{"service_name" => %{"$regex" => ".*#{service_name}.*", "$options" => "i"}}}
+  end
+
+  def extract_service_query(_) do
+    {:ok, %{}}
+  end
+
+  def create_archive_conn do
+    case Mongo.start_link(
+           database: "livevox-archives",
+           username: Application.get_env(:call_sync, :backupdb_username),
+           password: Application.get_env(:call_sync, :backupdb_password),
+           seeds: Application.get_env(:call_sync, :backupdb_seeds),
+           port: Application.get_env(:call_sync, :backupdb_port)
+         ) do
+      {:ok, conn} -> {:ok, conn}
+      {:error, {:already_started, conn}} -> {:ok, conn}
+    end
   end
 end
