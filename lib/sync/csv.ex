@@ -60,6 +60,7 @@ defmodule Sync.Csv do
       "Voter Last Name",
       "Voter Phone",
       "Date Called",
+      "Time Called (EST)",
       "Result",
       "Caller Login",
       "Caller Email"
@@ -88,7 +89,12 @@ defmodule Sync.Csv do
     row =
       Enum.concat(beginning, [
         phone_dialed,
-        timestamp |> Timex.shift(hours: -8) |> Timex.format!("{0M}-{0D}-{YYYY}"),
+        timestamp
+        |> Timex.Timezone.convert("America/New_York")
+        |> Timex.format!("{0M}-{0D}-{YYYY}"),
+        timestamp
+        |> Timex.Timezone.convert("America/New_York")
+        |> Timex.format!("{0h12}:{m} {AM} EST"),
         config[full_on_screen_result]["display_name"] || full_on_screen_result,
         agent_name,
         call["caller_email"]
@@ -145,8 +151,8 @@ defmodule Sync.Csv do
       |> Enum.map(fn ~m(display_name) -> {display_name, 0} end)
       |> Enum.into(%{})
 
-    Enum.reduce(rows, %{}, fn [_a, _b, _c, _d, _e, _f, g, _h, _i], acc ->
-      Map.update(acc, g, 1, &(&1 + 1))
+    Enum.reduce(rows, %{}, fn [_a, _b, _c, _d, _e, _f, _g, h, _i, _j], acc ->
+      Map.update(acc, h, 1, &(&1 + 1))
     end)
     |> Map.drop(~w(Result))
     # |> Enum.into(zeros)
