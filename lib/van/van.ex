@@ -22,7 +22,8 @@ defmodule Van do
         "people/#{voter_id}/record_canvass_helper",
         canvass,
         api_key: api_key,
-        mode: mode
+        mode: mode,
+        timeout: 1_000_000
       )
 
     {:ok, body}
