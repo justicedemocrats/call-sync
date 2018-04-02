@@ -18,7 +18,12 @@ defmodule Db do
   end
 
   def find(collection, query, opts \\ []) do
-    Mongo.find(:mongo, collection, query, Keyword.merge(opts, pool: DBConnection.Poolboy))
+    Mongo.find(
+      :mongo,
+      collection,
+      query,
+      Keyword.merge(opts, pool: DBConnection.Poolboy, timeout: 1_000_000)
+    )
   end
 
   def count(collection, query) do

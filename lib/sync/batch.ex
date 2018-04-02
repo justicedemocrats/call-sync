@@ -43,7 +43,7 @@ defmodule Sync.Batch do
           Task.async(fn -> get_success_count(service_names) end),
           Task.async(fn -> get_error_count(service_names) end)
         ]
-        |> Enum.map(&Task.await/1)
+        |> Enum.map(&Task.await(&1, 1_000_000))
 
       total = Sync.Info.value_sum(aggregated_results)
       csv_total = Sync.Info.value_sum(csv_aggregated_results)
