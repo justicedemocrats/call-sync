@@ -250,7 +250,7 @@ defmodule CallSync.IndexController do
           %{"contact" => true}
           |> Map.merge(time_query)
           |> Map.merge(service_query),
-          timeout: 100_000
+          timeout: 1_000_000
         )
 
       {:ok, total_drops} =
@@ -260,7 +260,7 @@ defmodule CallSync.IndexController do
           %{"dropped" => true}
           |> Map.merge(time_query)
           |> Map.merge(service_query),
-          timeout: 100_000
+          timeout: 1_000_000
         )
 
       drop_rate =

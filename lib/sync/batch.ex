@@ -2,7 +2,7 @@ defmodule Sync.Batch do
   require Logger
   import ShortMaps
 
-  @batch_size 10
+  @batch_size 5
 
   # Sync @batch_size results for the service in parallel, and record
   # If we're done (fetch_sync_bath_for returned no unsyced calls)
