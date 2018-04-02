@@ -277,7 +277,7 @@ defmodule CallSync.IndexController do
 
   def extract_time_query(~m(start_day count)) do
     now = Timex.now("America/New_York")
-    start_datetime = Timex.parse!(start_day, "{D}-{M}")
+    start_datetime = Timex.parse!(start_day, "{M}-{D}")
     {count, _} = Integer.parse(count)
 
     start_datetime_est =
