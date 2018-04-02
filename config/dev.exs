@@ -82,3 +82,7 @@ config :ex_aws,
   region: System.get_env("AWS_BUCKET_REGION")
 
 config :call_sync, application_name: System.get_env("VAN_APP_NAME")
+
+config :call_sync,
+  report_success_url: System.get_env("REPORT_SUCCESS_URL"),
+  report_error_url: System.get_env("REPORT_FAILURE_URL")

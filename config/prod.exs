@@ -66,3 +66,7 @@ config :ex_aws,
   region: "${AWS_BUCKET_REGION}"
 
 config :call_sync, application_name: "${VAN_APP_NAME}"
+
+config :call_sync,
+  report_success_url: "${REPORT_SUCCESS_URL}",
+  report_error_url: "${REPORT_FAILURE_URL}"

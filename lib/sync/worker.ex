@@ -3,7 +3,26 @@ defmodule Sync.Worker do
   import ShortMaps
   require Logger
 
+  def report_success_url, do: Application.get_env(:call_sync, :report_success_url)
+  def report_error_url, do: Application.get_env(:call_sync, :report_error_url)
+
   def sync_candidate(slug) do
+    try do
+      do_sync_candidate(slug)
+
+      HTTPotion.post(
+        report_success_url() |> IO.inspect(),
+        body: Poison.encode!(%{"timestamp" => DateTime.utc_now(), "slug" => slug})
+      )
+    rescue
+      e ->
+        error = e.message
+        timestamp = DateTime.utc_now()
+        HTTPotion.post(report_error_url(), body: Poison.encode!(~m(error timestamp slug)))
+    end
+  end
+
+  def do_sync_candidate(slug) do
     service_configuration = CallSync.AirtableCache.get_all().configurations[slug]
 
     listing_configuration = ~m(service_names) = CallSync.AirtableCache.get_all().listings[slug]
