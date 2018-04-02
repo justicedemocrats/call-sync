@@ -243,25 +243,52 @@ defmodule CallSync.IndexController do
     with {:ok, time_query} <- extract_time_query(params),
          {:ok, service_query} <- extract_service_query(params),
          {:ok, archive_conn} <- create_archive_conn() do
-      {:ok, total_contacts} =
-        Mongo.count(
-          archive_conn,
-          "calls",
-          %{"contact" => true}
-          |> Map.merge(time_query)
-          |> Map.merge(service_query),
-          timeout: 1_000_000
-        )
+      base_query = Map.merge(time_query, service_query)
+      contact_query = Map.merge(%{"contact" => true}, base_query)
+      dropped_query = Map.merge(%{"dropped" => true}, base_query)
 
-      {:ok, total_drops} =
-        Mongo.count(
-          archive_conn,
-          "calls",
-          %{"dropped" => true}
-          |> Map.merge(time_query)
-          |> Map.merge(service_query),
-          timeout: 1_000_000
-        )
+      full_opts = [timeout: 1_000_000, pool: DBConnection.Poolboy]
+      opts = [timeout: 1_000_000]
+
+      [total_archive_contacts, total_prod_contacts, total_archive_drops, total_prod_drops] =
+        [
+          Task.async(fn ->
+            Mongo.count!(
+              archive_conn,
+              "calls",
+              contact_query,
+              opts
+            )
+          end),
+          Task.async(fn ->
+            Mongo.count!(
+              :mongo,
+              "calls",
+              contact_query,
+              full_opts
+            )
+          end),
+          Task.async(fn ->
+            Mongo.count!(
+              archive_conn,
+              "calls",
+              dropped_query,
+              opts
+            )
+          end),
+          Task.async(fn ->
+            Mongo.count!(
+              :mongo,
+              "calls",
+              dropped_query,
+              full_opts
+            )
+          end)
+        ]
+        |> Enum.map(&Task.await/1)
+
+      total_contacts = total_archive_contacts + total_prod_contacts
+      total_drops = total_archive_drops + total_prod_drops
 
       drop_rate =
         case total_contacts do
