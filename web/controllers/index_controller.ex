@@ -250,42 +250,32 @@ defmodule CallSync.IndexController do
       full_opts = [timeout: 1_000_000, pool: DBConnection.Poolboy]
       opts = [timeout: 1_000_000]
 
-      [total_archive_contacts, total_prod_contacts, total_archive_drops, total_prod_drops] =
-        [
-          Task.async(fn ->
-            Mongo.count!(
-              archive_conn,
-              "calls",
-              contact_query,
-              opts
-            )
-          end),
-          Task.async(fn ->
-            Mongo.count!(
-              :mongo,
-              "calls",
-              contact_query,
-              full_opts
-            )
-          end),
-          Task.async(fn ->
-            Mongo.count!(
-              archive_conn,
-              "calls",
-              dropped_query,
-              opts
-            )
-          end),
-          Task.async(fn ->
-            Mongo.count!(
-              :mongo,
-              "calls",
-              dropped_query,
-              full_opts
-            )
-          end)
-        ]
-        |> Enum.map(&Task.await/1)
+      [total_archive_contacts, total_prod_contacts, total_archive_drops, total_prod_drops] = [
+        Mongo.count!(
+          archive_conn,
+          "calls",
+          contact_query,
+          opts
+        ),
+        Mongo.count!(
+          :mongo,
+          "calls",
+          contact_query,
+          full_opts
+        ),
+        Mongo.count!(
+          archive_conn,
+          "calls",
+          dropped_query,
+          opts
+        ),
+        Mongo.count!(
+          :mongo,
+          "calls",
+          dropped_query,
+          full_opts
+        )
+      ]
 
       total_contacts = total_archive_contacts + total_prod_contacts
       total_drops = total_archive_drops + total_prod_drops
