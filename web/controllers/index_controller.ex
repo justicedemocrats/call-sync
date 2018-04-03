@@ -283,7 +283,7 @@ defmodule CallSync.IndexController do
       drop_rate =
         case total_contacts do
           0 -> "N/A"
-          _ -> total_drops / total_contacts
+          _ -> total_drops / (total_drops + total_contacts)
         end
 
       json(conn, ~m(drop_rate total_drops total_contacts))
