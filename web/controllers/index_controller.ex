@@ -327,6 +327,7 @@ defmodule CallSync.IndexController do
   end
 
   def extract_service_query(~m(service_name)) do
+    service_name = String.downcase(service_name)
     {:ok, %{"service_name" => %{"$regex" => ".*#{service_name}.*", "$options" => "i"}}}
   end
 
