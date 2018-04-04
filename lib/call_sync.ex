@@ -32,7 +32,8 @@ defmodule CallSync do
             username: Application.get_env(:call_sync, :backupdb_username),
             password: Application.get_env(:call_sync, :backupdb_password),
             seeds: Application.get_env(:call_sync, :backupdb_seeds),
-            port: Application.get_env(:call_sync, :backupdb_port)
+            port: Application.get_env(:call_sync, :backupdb_port),
+            pool: DBConnection.Poolboy
           ]
         ],
         id: :archives

@@ -247,14 +247,13 @@ defmodule CallSync.IndexController do
       dropped_query = Map.merge(%{"dropped" => true}, base_query)
 
       full_opts = [timeout: 1_000_000, pool: DBConnection.Poolboy]
-      opts = [timeout: 1_000_000]
 
       [total_archive_contacts, total_prod_contacts, total_archive_drops, total_prod_drops] = [
         Mongo.count!(
           :archives,
           "calls",
           contact_query,
-          opts
+          full_opts
         ),
         Mongo.count!(
           :mongo,
@@ -266,7 +265,7 @@ defmodule CallSync.IndexController do
           :archives,
           "calls",
           dropped_query,
-          opts
+          full_opts
         ),
         Mongo.count!(
           :mongo,
