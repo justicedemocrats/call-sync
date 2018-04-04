@@ -8,17 +8,35 @@ defmodule CallSync do
       supervisor(CallSync.Endpoint, []),
       worker(CallSync.AirtableCache, []),
       worker(Livevox.Session, []),
-      worker(Mongo, [
+      worker(
+        Mongo,
         [
-          name: :mongo,
-          database: "livevox",
-          username: Application.get_env(:call_sync, :mongodb_username),
-          password: Application.get_env(:call_sync, :mongodb_password),
-          seeds: Application.get_env(:call_sync, :mongodb_seeds),
-          port: Application.get_env(:call_sync, :mongodb_port),
-          pool: DBConnection.Poolboy
-        ]
-      ]),
+          [
+            name: :mongo,
+            database: "livevox",
+            username: Application.get_env(:call_sync, :mongodb_username),
+            password: Application.get_env(:call_sync, :mongodb_password),
+            seeds: Application.get_env(:call_sync, :mongodb_seeds),
+            port: Application.get_env(:call_sync, :mongodb_port),
+            pool: DBConnection.Poolboy
+          ]
+        ],
+        id: :mongo
+      ),
+      worker(
+        Mongo,
+        [
+          [
+            name: :archives,
+            database: "livevox-archives",
+            username: Application.get_env(:call_sync, :backupdb_username),
+            password: Application.get_env(:call_sync, :backupdb_password),
+            seeds: Application.get_env(:call_sync, :backupdb_seeds),
+            port: Application.get_env(:call_sync, :backupdb_port)
+          ]
+        ],
+        id: :archives
+      ),
       worker(CallSync.Scheduler, []),
       Honeydew.queue_spec(:queue),
       Honeydew.worker_spec(:queue, Sync.Worker, num: 1)

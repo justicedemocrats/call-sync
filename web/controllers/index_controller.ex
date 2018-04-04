@@ -241,8 +241,7 @@ defmodule CallSync.IndexController do
 
   def drop_rate(conn, params) do
     with {:ok, time_query} <- extract_time_query(params),
-         {:ok, service_query} <- extract_service_query(params),
-         {:ok, archive_conn} <- create_archive_conn() do
+         {:ok, service_query} <- extract_service_query(params) do
       base_query = Map.merge(time_query, service_query)
       contact_query = Map.merge(%{"contact" => true}, base_query)
       dropped_query = Map.merge(%{"dropped" => true}, base_query)
@@ -252,7 +251,7 @@ defmodule CallSync.IndexController do
 
       [total_archive_contacts, total_prod_contacts, total_archive_drops, total_prod_drops] = [
         Mongo.count!(
-          archive_conn,
+          :archives,
           "calls",
           contact_query,
           opts
@@ -264,7 +263,7 @@ defmodule CallSync.IndexController do
           full_opts
         ),
         Mongo.count!(
-          archive_conn,
+          :archives,
           "calls",
           dropped_query,
           opts
@@ -323,18 +322,5 @@ defmodule CallSync.IndexController do
 
   def extract_service_query(_) do
     {:ok, %{}}
-  end
-
-  def create_archive_conn do
-    case Mongo.start_link(
-           database: "livevox-archives",
-           username: Application.get_env(:call_sync, :backupdb_username),
-           password: Application.get_env(:call_sync, :backupdb_password),
-           seeds: Application.get_env(:call_sync, :backupdb_seeds),
-           port: Application.get_env(:call_sync, :backupdb_port)
-         ) do
-      {:ok, conn} -> {:ok, conn}
-      {:error, {:already_started, conn}} -> {:ok, conn}
-    end
   end
 end
