@@ -242,52 +242,63 @@ defmodule CallSync.IndexController do
   def drop_rate(conn, params) do
     with {:ok, time_query} <- extract_time_query(params),
          {:ok, service_query} <- extract_service_query(params) do
-      base_query = Map.merge(time_query, service_query)
-      contact_query = Map.merge(%{"contact" => true}, base_query)
-      dropped_query = Map.merge(%{"dropped" => true}, base_query)
-
-      full_opts = [timeout: 1_000_000, pool: DBConnection.Poolboy]
-
-      [total_archive_contacts, total_prod_contacts, total_archive_drops, total_prod_drops] = [
-        Mongo.count!(
-          :archives,
-          "calls",
-          contact_query,
-          full_opts
-        ),
-        Mongo.count!(
-          :mongo,
-          "calls",
-          contact_query,
-          full_opts
-        ),
-        Mongo.count!(
-          :archives,
-          "calls",
-          dropped_query,
-          full_opts
-        ),
-        Mongo.count!(
-          :mongo,
-          "calls",
-          dropped_query,
-          full_opts
-        )
-      ]
-
-      total_contacts = total_archive_contacts + total_prod_contacts
-      total_drops = total_archive_drops + total_prod_drops
-
-      drop_rate =
-        case total_contacts do
-          0 -> "N/A"
-          _ -> total_drops / (total_drops + total_contacts)
+      result =
+        try do
+          do_calc_drop_rate(time_query, service_query)
+        rescue
+          _ -> do_calc_drop_rate(time_query, service_query)
         end
 
-      json(conn, ~m(drop_rate total_drops total_contacts))
+      json(conn, result)
     else
       {:error, message} -> send_resp(conn, 400, message)
     end
+  end
+
+  def do_calc_drop_rate(time_query, service_query) do
+    base_query = Map.merge(time_query, service_query)
+    contact_query = Map.merge(%{"contact" => true}, base_query)
+    dropped_query = Map.merge(%{"dropped" => true}, base_query)
+
+    full_opts = [timeout: 1_000_000, pool: DBConnection.Poolboy]
+
+    [total_archive_contacts, total_prod_contacts, total_archive_drops, total_prod_drops] = [
+      Mongo.count!(
+        :archives,
+        "calls",
+        contact_query,
+        full_opts
+      ),
+      Mongo.count!(
+        :mongo,
+        "calls",
+        contact_query,
+        full_opts
+      ),
+      Mongo.count!(
+        :archives,
+        "calls",
+        dropped_query,
+        full_opts
+      ),
+      Mongo.count!(
+        :mongo,
+        "calls",
+        dropped_query,
+        full_opts
+      )
+    ]
+
+    total_contacts = total_archive_contacts + total_prod_contacts
+    total_drops = total_archive_drops + total_prod_drops
+
+    drop_rate =
+      case total_contacts do
+        0 -> "N/A"
+        _ -> total_drops / (total_drops + total_contacts)
+      end
+
+    ~m(drop_rate total_drops total_contacts)
   end
 
   def extract_time_query(~m(start_day count)) do
