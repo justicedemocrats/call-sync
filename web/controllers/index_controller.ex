@@ -246,7 +246,13 @@ defmodule CallSync.IndexController do
         try do
           do_calc_drop_rate(time_query, service_query)
         rescue
-          _ -> do_calc_drop_rate(time_query, service_query)
+          _ ->
+            try do
+              do_calc_drop_rate(time_query, service_query)
+            rescue
+              _ ->
+                do_calc_drop_rate(time_query, service_query)
+            end
         end
 
       json(conn, result)
