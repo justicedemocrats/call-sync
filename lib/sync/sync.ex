@@ -14,7 +14,7 @@ defmodule Sync do
     |> Enum.sort()
     |> Enum.map(fn {slug, _} ->
       Logger.info("Starting sync for #{slug}")
-      Honeydew.async({:sync_candidate, [slug]}, :queue)
+      queue_candidate(slug)
     end)
   end
 
@@ -27,7 +27,7 @@ defmodule Sync do
     # |> Enum.slice(2..200)
     |> Enum.map(fn {slug, _} ->
       Logger.info("Starting sync for #{slug}")
-      # Honeydew.async({:sync_candidate, [slug]}, :queue)
+      queue_candidate(slug)
     end)
   end
 
@@ -47,5 +47,9 @@ defmodule Sync do
       true ->
         true
     end
+  end
+
+  def queue_candidate(slug) do
+    Honeydew.async({:sync_candidate, [slug]}, :queue)
   end
 end

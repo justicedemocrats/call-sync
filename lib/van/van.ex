@@ -25,6 +25,7 @@ defmodule Van do
         mode: mode,
         timeout: 1_000_000
       )
+      |> IO.inspect()
 
     {:ok, body}
   end
