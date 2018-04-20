@@ -1,4 +1,4 @@
-defmodule Sync.Batch do
+defmodule CallSync.Batch do
   require Logger
   import ShortMaps
 

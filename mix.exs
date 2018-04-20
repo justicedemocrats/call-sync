@@ -43,7 +43,7 @@ defmodule CallSync.Mixfile do
       {:timex, "~> 3.1"},
       {:distillery, "~> 1.0.0"},
       {:httpoison, "~> 1.0"},
-      {:httpotion, "~> 3.0.3"},
+      {:httpotion, "~> 3.1.0"},
       {:mongodb, "~> 0.4.3"},
       {:poolboy, "~> 1.5.1"},
       {:nimble_csv, "~> 0.3"},
@@ -51,7 +51,8 @@ defmodule CallSync.Mixfile do
       {:ex_aws_s3, "~> 2.0"},
       {:hackney, "~> 1.9"},
       {:sweet_xml, "~> 0.6"},
-      {:honeydew, "~> 1.0.4"}
+      {:honeydew, "~> 1.0.4"},
+      {:airtable_config, git: "https://github.com/justicedemocrats/airtable_config.git"}
     ]
   end
 end

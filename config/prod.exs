@@ -24,29 +24,35 @@ config :logger, level: :info
 config :call_sync, update_secret: "${UPDATE_SECRET}"
 
 config :call_sync,
-  mongodb_username: "${MONGO_USERNAME}",
-  mongodb_seeds: ["${MONGO_SEED_1}", "${MONGO_SEED_2}"],
-  mongodb_password: "${MONGO_PASSWORD}",
-  mongodb_port: "${MONGO_PORT}"
+  syncdb_username: "${SYNCDB_USERNAME}",
+  syncdb_password: "${SYNCDB_PASSWORD}",
+  syncdb_seeds: [
+    "${SYNCDB_SEED_1}",
+    "${SYNCDB_SEED_2}"
+  ],
+  syncdb_port: "${SYNCDB_PORT}"
+
+config :call_sync,
+  archivedb_username: "${ARCHIVEDB_USERNAME}",
+  archivedb_password: "${ARCHIVEDB_PASSWORD}",
+  archivedb_seeds: [
+    "${ARCHIVEDB_SEED_1}",
+    "${ARCHIVEDB_SEED_2}"
+  ],
+  archivedb_port: "${ARCHIVEDB_PORT}"
 
 config :rollbax,
   access_token: "${ROLLBAR_ACCESS_TOKEN}",
   environment: "production"
 
 config :call_sync,
-  airtable_key: "${AIRTABLE_KEY}",
-  airtable_base: "${AIRTABLE_BASE}",
-  airtable_table_name: "${AIRTABLE_TABLE_NAME}",
+  sync_airtable_key: System.get_env("SYNC_AIRTABLE_KEY"),
+  sync_airtable_base: System.get_env("SYNC_AIRTABLE_BASE"),
+  sync_airtable_table_name: System.get_env("SYNC_AIRTABLE_TABLE_NAME"),
+  term_code_airtable_key: System.get_env("TERM_CODE_AIRTABLE_KEY"),
+  term_code_airtable_base: System.get_env("TERM_CODE_AIRTABLE_BASE"),
+  term_code_airtable_table_name: System.get_env("TERM_CODE_AIRTABLE_TABLE_NAME"),
   secret: "${UPDATE_SECRET}"
-
-config :call_sync,
-  backupdb_username: "${BACKUPDB_USERNAME}",
-  backupdb_password: "${BACKUPDB_PASSWORD}",
-  backupdb_seeds: [
-    "${BACKUPDB_SEED_1}",
-    "${BACKUPDB_SEED_2}"
-  ],
-  backupdb_port: "${BACKUPDB_PORT}"
 
 config :call_sync,
   lv_access_token: "${LIVEVOX_ACCESS_TOKEN}",
@@ -54,19 +60,17 @@ config :call_sync,
   lv_username: "${LIVEVOX_USERNAME}",
   lv_password: "${LIVEVOX_PASSWORD}"
 
-config :call_sync,
-  aws_bucket_name: "${AWS_BUCKET_NAME}",
-  zapier_hook_url: "${ZAPIER_HOOK_URL}",
-  second_zapier_hook_url: "${SECOND_ZAPIER_HOOK_URL}",
-  login_management_url: "${LOGIN_MANAGEMENT_URL}"
-
 config :ex_aws,
   access_key_id: "${AWS_ACCESS_KEY_ID}",
   secret_access_key: "${AWS_SECRET_ACCESS_KEY}",
   region: "${AWS_BUCKET_REGION}"
 
+config :call_sync, aws_bucket_name: "${AWS_BUCKET_NAME}"
 config :call_sync, application_name: "${VAN_APP_NAME}"
 
 config :call_sync,
   report_success_url: "${REPORT_SUCCESS_URL}",
-  report_error_url: "${REPORT_FAILURE_URL}"
+  report_error_url: "${REPORT_FAILURE_URL}",
+  zapier_hook_url: "${ZAPIER_HOOK_URL}",
+  second_zapier_hook_url: "${SECOND_ZAPIER_HOOK_URL}",
+  login_management_url: "${LOGIN_MANAGEMENT_URL}"

@@ -1,4 +1,4 @@
-defmodule Sync.Csv do
+defmodule CallSync.Csv do
   import ShortMaps
   import SweetXml
   require Logger

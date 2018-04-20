@@ -1,4 +1,4 @@
-defmodule Sync.Info do
+defmodule CallSync.Info do
   import ShortMaps
   require Logger
 

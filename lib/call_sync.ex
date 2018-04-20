@@ -6,38 +6,39 @@ defmodule CallSync do
 
     children = [
       supervisor(CallSync.Endpoint, []),
-      worker(CallSync.AirtableCache, []),
+      worker(CallSync.SyncConfig, []),
+      worker(CallSync.TermCodeConfig, []),
       worker(Livevox.Session, []),
-      worker(
-        Mongo,
-        [
-          [
-            name: :mongo,
-            database: "livevox",
-            username: Application.get_env(:call_sync, :mongodb_username),
-            password: Application.get_env(:call_sync, :mongodb_password),
-            seeds: Application.get_env(:call_sync, :mongodb_seeds),
-            port: Application.get_env(:call_sync, :mongodb_port),
-            pool: DBConnection.Poolboy
-          ]
-        ],
-        id: :mongo
-      ),
-      worker(
-        Mongo,
-        [
-          [
-            name: :archives,
-            database: "livevox-archives",
-            username: Application.get_env(:call_sync, :backupdb_username),
-            password: Application.get_env(:call_sync, :backupdb_password),
-            seeds: Application.get_env(:call_sync, :backupdb_seeds),
-            port: Application.get_env(:call_sync, :backupdb_port),
-            pool: DBConnection.Poolboy
-          ]
-        ],
-        id: :archives
-      ),
+      # worker(
+      #   Mongo,
+      #   [
+      #     [
+      #       name: :syncdb,
+      #       database: "call-sync",
+      #       username: Application.get_env(:call_sync, :syncdb_username),
+      #       password: Application.get_env(:call_sync, :syncdb_password),
+      #       seeds: Application.get_env(:call_sync, :syncdb_seeds),
+      #       port: Application.get_env(:call_sync, :syncdb_port),
+      #       pool: DBConnection.Poolboy
+      #     ]
+      #   ],
+      #   id: :syncdb
+      # ),
+      # worker(
+      #   Mongo,
+      #   [
+      #     [
+      #       name: :archivedb,
+      #       database: "livevox-archives",
+      #       username: Application.get_env(:call_sync, :archivedb_username),
+      #       password: Application.get_env(:call_sync, :archivedb_password),
+      #       seeds: Application.get_env(:call_sync, :archivedb_seeds),
+      #       port: Application.get_env(:call_sync, :archivedb_port),
+      #       pool: DBConnection.Poolboy
+      #     ]
+      #   ],
+      #   id: :archivedb
+      # ),
       worker(CallSync.Scheduler, []),
       Honeydew.queue_spec(:queue),
       Honeydew.worker_spec(:queue, Sync.Worker, num: 1)

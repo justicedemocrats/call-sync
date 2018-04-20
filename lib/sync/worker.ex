@@ -1,4 +1,4 @@
-defmodule Sync.Worker do
+defmodule CallSync.Worker do
   use Honeydew.Progress
   import ShortMaps
   require Logger

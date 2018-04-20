@@ -1,11 +1,11 @@
-defmodule CallSync.AirtableCache do
+defmodule CallSync.SyncConfig do
   use Agent
   require Logger
   import ShortMaps
 
-  def key, do: Application.get_env(:call_sync, :airtable_key)
-  def base, do: Application.get_env(:call_sync, :airtable_base)
-  def root_table, do: Application.get_env(:call_sync, :airtable_table_name)
+  def key, do: Application.get_env(:call_sync, :sync_airtable_key)
+  def base, do: Application.get_env(:call_sync, :sync_airtable_base)
+  def root_table, do: Application.get_env(:call_sync, :sync_airtable_table_name)
 
   def start_link do
     Agent.start_link(

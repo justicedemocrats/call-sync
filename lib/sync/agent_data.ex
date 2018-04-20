@@ -1,4 +1,4 @@
-defmodule Sync.AgentData do
+defmodule CallSync.AgentData do
   require Logger
 
   @max_attempts 5

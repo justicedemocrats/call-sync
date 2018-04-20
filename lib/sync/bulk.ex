@@ -1,4 +1,4 @@
-defmodule Sync.Bulk do
+defmodule CallSync.Bulk do
   import ShortMaps
 
   def sync_bulk(slug, service_names, config, progress_fn) do

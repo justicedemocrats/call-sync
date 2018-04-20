@@ -1,4 +1,4 @@
-defmodule Sync.Reset do
+defmodule CallSync.Reset do
   import ShortMaps
 
   def candidate(slug) do
