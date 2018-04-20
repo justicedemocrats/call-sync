@@ -17,8 +17,14 @@ defmodule Sync.Info do
     try do
       %{body: %{"findMatchingContactsDetails" => matches}} =
         Livevox.Api.post(
-          "contact/v6.0/contacts/search",
-          body: %{"filter" => %{"phone" => phone_dialed}},
+          "contact/contacts/search",
+          body: %{
+            "search" => %{
+              "field" => "phone",
+              "condition" => "EQUALS",
+              "criteria" => phone_dialed
+            }
+          },
           query: %{"count" => 100, "offset" => 0},
           timeout: 20_000
         )
