@@ -101,8 +101,16 @@ defmodule Sync.Info do
         {:ok, ~m(district system id first_name last_name)}
 
       _ ->
-        message = "failed to fetch voter id: bad account number format: #{account}"
-        {:error, ~m(message first_name last_name)}
+        case account do
+          "ca25-pdi" <> id ->
+            district = "ca25"
+            system = "pdi"
+            {:ok, ~m(district system id first_name last_name)}
+
+          _ ->
+            message = "failed to fetch voter id: bad account number format: #{account}"
+            {:error, ~m(message first_name last_name)}
+        end
     end
   end
 
