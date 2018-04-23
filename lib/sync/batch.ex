@@ -206,7 +206,7 @@ defmodule Sync.Batch do
       |> Map.merge(%{"service_name" => %{"$in" => service_names}})
     )
     |> Enum.reduce(%{}, fn ~m(full_on_screen_result), acc ->
-      result = config[full_on_screen_result]["display_name"] || full_on_screen_result
+      result = config[String.trim(full_on_screen_result)]["display_name"] || full_on_screen_result
       Map.update(acc, result, 1, &(&1 + 1))
     end)
     # |> Enum.into(zeros)

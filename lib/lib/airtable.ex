@@ -112,7 +112,7 @@ defmodule CallSync.AirtableCache do
       result_code = fields["Canvass Result Code"]
       should_sync = fields["Sync to System"]
       csv_only = fields["Include in CSV"]
-      display_name = fields["Display Name"]
+      display_name = String.trim(fields["Display Name"])
 
       tags =
         case fields["Tags"] do
@@ -141,8 +141,9 @@ defmodule CallSync.AirtableCache do
           {q, r}
         end)
 
-      {String.downcase(fields["Full On Screen Result"]),
-       ~m(success result_code tags qr_pairs display_name should_sync csv_only)}
+      fosr = fields["Full On Screen Result"] |> String.downcase() |> String.trim()
+
+      {fosr, ~m(success result_code tags qr_pairs display_name should_sync csv_only)}
     end)
     |> Enum.filter(fn {_, ~m(should_sync csv_only)} -> should_sync == true or csv_only == true end)
     |> Enum.into(%{})

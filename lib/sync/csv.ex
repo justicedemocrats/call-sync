@@ -95,7 +95,7 @@ defmodule Sync.Csv do
         timestamp
         |> Timex.Timezone.convert("America/New_York")
         |> Timex.format!("{0h12}:{m} {AM} EST"),
-        config[full_on_screen_result]["display_name"] || full_on_screen_result,
+        config[String.trim(full_on_screen_result)]["display_name"] || full_on_screen_result,
         agent_name,
         call["caller_email"]
       ])
