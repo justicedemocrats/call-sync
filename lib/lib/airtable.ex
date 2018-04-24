@@ -107,12 +107,17 @@ defmodule CallSync.AirtableCache do
 
   defp process_configuration(records) do
     records
+    |> Enum.filter(fn ~m(fields) -> Map.has_key?(fields, "Full On Screen Result") end)
     |> Enum.map(fn ~m(fields) ->
       success = fields["Success"] == true
       result_code = fields["Canvass Result Code"]
       should_sync = fields["Sync to System"]
       csv_only = fields["Include in CSV"]
-      display_name = String.trim(fields["Display Name"])
+
+      display_name =
+        if is_binary(fields["Display Name"]),
+          do: String.trim(fields["Display Name"]),
+          else: fields["Display Name"]
 
       tags =
         case fields["Tags"] do
@@ -142,7 +147,6 @@ defmodule CallSync.AirtableCache do
         end)
 
       fosr = fields["Full On Screen Result"] |> String.downcase() |> String.trim()
-
       {fosr, ~m(success result_code tags qr_pairs display_name should_sync csv_only)}
     end)
     |> Enum.filter(fn {_, ~m(should_sync csv_only)} -> should_sync == true or csv_only == true end)
