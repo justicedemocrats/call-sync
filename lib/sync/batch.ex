@@ -2,7 +2,7 @@ defmodule Sync.Batch do
   require Logger
   import ShortMaps
 
-  @batch_size 1
+  @batch_size 5
 
   # Sync @batch_size results for the service in parallel, and record
   # If we're done (fetch_sync_bath_for returned no unsyced calls)
@@ -26,7 +26,6 @@ defmodule Sync.Batch do
       fetch_sync_batch_for(service_names)
       |> Enum.map(fn call -> task_sync_call(call, service_configuration, api_key, mode) end)
       |> Enum.map(fn t -> Task.await(t, 30_000) end)
-      |> IO.inspect()
 
     progress_fn.(done + @batch_size)
     Logger.info("Did batch")
@@ -101,7 +100,6 @@ defmodule Sync.Batch do
 
   def sync_call(call, configuration, api_key, mode) do
     send_out(call, configuration, api_key, mode)
-    |> IO.inspect()
     |> write_result(call)
   end
 
@@ -109,7 +107,7 @@ defmodule Sync.Batch do
     mark_started(call)
 
     with {:ok, body} <- configure_body(call, config),
-         {:ok, ~m(id)} <- Sync.Info.fetch_voter_id(call) |> IO.inspect(),
+         {:ok, ~m(id)} <- Sync.Info.fetch_voter_id(call),
          {:ok, ~m(identifiers)} <- Van.record_canvass(id, body, api_key, mode) do
       sync_status = "finished"
       receipt = List.first(identifiers)
