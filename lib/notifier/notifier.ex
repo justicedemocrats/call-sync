@@ -48,8 +48,6 @@ Your dialer results for #{reference_name} on #{day} have been processed and are 
       file_url
     }.
 
-These are only your results for 05-02 – supplementary results for 04-30 and 05-01 will be coming soon.
-
 Note that this link will expire after 2 days for security reasons, so please download and save your results now.
 
 Here's a breakdown of your #{total} total results for the day:
@@ -81,8 +79,6 @@ Your dialer results for #{reference_name} on #{day} have been processed and uplo
 Here's a breakdown of your results for the day:
 #{results}
 
-These are only your results for 05-02 – supplementary results for 04-30 and 05-01 will be coming soon.
-
 We successfully synced #{success_count}, and there were #{error_count} errors.
 
 You had #{agent_count} callers. You can download their contact information at #{agent_file_url}.
@@ -110,8 +106,6 @@ Your dialer results for #{reference_name} on #{day} have been processed and uplo
 
 Here's a breakdown of your results for the day:
 #{results}
-
-These are only your results for 05-02 – supplementary results for 04-30 and 05-01 will be coming soon.
 
 We successfully synced #{success_count}, and there were #{error_count} errors.
 
