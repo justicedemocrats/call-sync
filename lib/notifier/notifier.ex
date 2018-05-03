@@ -6,7 +6,7 @@ defmodule Notifier do
   def second_zap_url, do: Application.get_env(:call_sync, :second_zapier_hook_url)
 
   def send(slug, type, data) do
-    config = ~m(report_to) = CallSync.AirtableCache.get_all().listings[slug]
+    config = ~m(report_to) = CallSync.SyncConfig.get_all().listings[slug]
     day = Timex.now() |> Timex.shift(days: -1) |> Timex.format!("{0M}-{0D}")
 
     subject = "Dialer Results for #{day}"
@@ -48,6 +48,8 @@ Your dialer results for #{reference_name} on #{day} have been processed and are 
       file_url
     }.
 
+These are only your results for 05-02 – supplementary results for 04-30 and 05-01 will be coming soon.
+
 Note that this link will expire after 2 days for security reasons, so please download and save your results now.
 
 Here's a breakdown of your #{total} total results for the day:
@@ -79,6 +81,8 @@ Your dialer results for #{reference_name} on #{day} have been processed and uplo
 Here's a breakdown of your results for the day:
 #{results}
 
+These are only your results for 05-02 – supplementary results for 04-30 and 05-01 will be coming soon.
+
 We successfully synced #{success_count}, and there were #{error_count} errors.
 
 You had #{agent_count} callers. You can download their contact information at #{agent_file_url}.
@@ -106,6 +110,8 @@ Your dialer results for #{reference_name} on #{day} have been processed and uplo
 
 Here's a breakdown of your results for the day:
 #{results}
+
+These are only your results for 05-02 – supplementary results for 04-30 and 05-01 will be coming soon.
 
 We successfully synced #{success_count}, and there were #{error_count} errors.
 

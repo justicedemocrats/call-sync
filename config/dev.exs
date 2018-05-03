@@ -35,6 +35,15 @@ config :call_sync,
   ],
   archivedb_port: System.get_env("ARCHIVEDB_PORT")
 
+config :call_sync,
+  productiondb_username: System.get_env("PRODUCTIONDB_USERNAME"),
+  productiondb_password: System.get_env("PRODUCTIONDB_PASSWORD"),
+  productiondb_seeds: [
+    System.get_env("PRODUCTIONDB_SEED_1"),
+    System.get_env("PRODUCTIONDB_SEED_2")
+  ],
+  productiondb_port: System.get_env("PRODUCTIONDB_PORT")
+
 config :rollbax,
   access_token: System.get_env("ROLLBAR_ACCESS_TOKEN"),
   environment: "production"

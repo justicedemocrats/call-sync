@@ -1,6 +1,6 @@
 defmodule CallSync.IndexController do
   import ShortMaps
-  alias CallSync.{AirtableCache}
+  alias CallSync.{SyncConfig}
   use CallSync.Web, :controller
 
   def index(conn, _) do
@@ -31,7 +31,7 @@ defmodule CallSync.IndexController do
 
   def configure_lookup(conn, ~m(slug)) do
     resp =
-      case AirtableCache.get_all().listings[slug] do
+      case SyncConfig.get_all().listings[slug] do
         ~m(api_key reference_name system) ->
           [questions, tags, status_codes] =
             Enum.map(
@@ -128,7 +128,7 @@ defmodule CallSync.IndexController do
 
         _no_match ->
           options =
-            AirtableCache.get_all().listings
+            SyncConfig.get_all().listings
             |> Enum.map(fn {slug, _} -> slug end)
             |> Enum.join(", ")
 
@@ -140,9 +140,9 @@ defmodule CallSync.IndexController do
 
   def validate(conn, ~m(slug)) do
     resp =
-      case AirtableCache.get_all().listings[slug] do
+      case SyncConfig.get_all().listings[slug] do
         ~m(api_key system) ->
-          configuration = AirtableCache.get_all().configurations[slug]
+          configuration = SyncConfig.get_all().configurations[slug]
           result = CallSync.Verification.verify(configuration, api_key, system)
 
           header_message =
@@ -184,7 +184,7 @@ defmodule CallSync.IndexController do
 
         _no_match ->
           options =
-            AirtableCache.get_all()
+            SyncConfig.get_all()
             |> Enum.map(fn {slug, _} -> slug end)
             |> Enum.join(", ")
 
@@ -195,7 +195,7 @@ defmodule CallSync.IndexController do
   end
 
   def run(conn, ~m(slug)) do
-    Sync.queue_candidate(slug)
+    CallSync.SyncManager.queue_candidate(slug)
 
     up_to = Timex.shift(Timex.now("America/New_York"), hours: -0) |> DateTime.to_iso8601()
     ago = Timex.shift(Timex.now("America/New_York"), hours: -24) |> DateTime.to_iso8601()
@@ -268,35 +268,20 @@ defmodule CallSync.IndexController do
 
     full_opts = [timeout: 1_000_000, pool: DBConnection.Poolboy]
 
-    [total_archive_contacts, total_prod_contacts, total_archive_drops, total_prod_drops] = [
+    [total_contacts, total_drops] = [
       Mongo.count!(
-        :archives,
+        :syncdb,
         "calls",
         contact_query,
         full_opts
       ),
       Mongo.count!(
-        :mongo,
+        :syncdb,
         "calls",
         contact_query,
-        full_opts
-      ),
-      Mongo.count!(
-        :archives,
-        "calls",
-        dropped_query,
-        full_opts
-      ),
-      Mongo.count!(
-        :mongo,
-        "calls",
-        dropped_query,
         full_opts
       )
     ]
-
-    total_contacts = total_archive_contacts + total_prod_contacts
-    total_drops = total_archive_drops + total_prod_drops
 
     drop_rate =
       case total_contacts do

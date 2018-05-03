@@ -6,9 +6,9 @@ defmodule CallSync.AgentData do
 
   def login_management_url, do: Application.get_env(:call_sync, :login_management_url)
 
-  def from(service_names) do
+  def from(district) do
     agent_data =
-      Db.distinct_callers(service_names)
+      Db.distinct_callers(district)
       |> Stream.filter(&(&1 != nil and &1 != ""))
       |> Stream.map(fn agent ->
         do_get_agent_data(agent, 1)
@@ -24,7 +24,7 @@ defmodule CallSync.AgentData do
       attributes = Poison.decode!(body)
       Enum.map(~w(login email phone calling_from), &Map.get(attributes, &1))
     rescue
-      e ->
+      _e ->
         if attempt < @max_attempts do
           Logger.info("Retrying – attempt #{attempt + 1}")
           :timer.sleep(@sleep_period)
@@ -40,11 +40,11 @@ defmodule CallSync.AgentData do
     random_bits = Enum.map(0..8, fn _ -> Enum.random(0..9) end) |> Enum.join("")
     file_name = "#{slug}-agents-#{time_comp}-#{random_bits}.csv"
 
-    path = Sync.Csv.write_to_temp_file(rows, file_name)
+    path = CallSync.Csv.write_to_temp_file(rows, file_name)
     Logger.info("Wrote to temp file #{path}.")
-    file_url = Sync.Csv.upload_to_s3(path, file_name)
+    file_url = CallSync.Csv.upload_to_s3(path, file_name)
     Logger.info("Uploaded to #{file_url}")
-    Sync.Csv.delete_temp_file(path)
+    CallSync.Csv.delete_temp_file(path)
 
     {file_url, length(rows) - 1}
   end

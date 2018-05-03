@@ -38,8 +38,6 @@ defmodule Archive do
 
     {:ok, _} = Mongo.insert_many(:backupdb, collection, calls_chunk)
 
-    query = %{"_id" => %{"$in" => ids}}
-
     {:ok, _} =
       Mongo.delete_many(
         :mongo,

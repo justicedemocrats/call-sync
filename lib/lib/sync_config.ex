@@ -91,6 +91,7 @@ defmodule CallSync.SyncConfig do
         %{
           "service_names" =>
             String.split(fields["Service Names"], ",") |> Enum.map(&String.trim(&1)),
+          "district_abbreviation" => fields["District Abbreviation"],
           "system" => fields["System"],
           "api_key" => fields["API Key"],
           "tag_ids" => fields["Tag Ids"],
@@ -107,6 +108,7 @@ defmodule CallSync.SyncConfig do
 
   defp process_configuration(records) do
     records
+    |> Enum.filter(fn ~m(fields) -> Map.has_key?(fields, "Full On Screen Result") end)
     |> Enum.map(fn ~m(fields) ->
       success = fields["Success"] == true
       result_code = fields["Canvass Result Code"]
@@ -141,7 +143,7 @@ defmodule CallSync.SyncConfig do
           {q, r}
         end)
 
-      {String.downcase(fields["Full On Screen Result"]),
+      {fields["Full On Screen Result"] |> String.downcase() |> String.trim(),
        ~m(success result_code tags qr_pairs display_name should_sync csv_only)}
     end)
     |> Enum.filter(fn {_, ~m(should_sync csv_only)} -> should_sync == true or csv_only == true end)

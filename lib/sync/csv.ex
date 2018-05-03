@@ -62,8 +62,7 @@ defmodule CallSync.Csv do
       "Date Called",
       "Time Called (EST)",
       "Result",
-      "Caller Login",
-      "Caller Email"
+      "Caller Login"
     ]
   end
 
@@ -77,28 +76,24 @@ defmodule CallSync.Csv do
   end
 
   def convert_to_row(
-        call = ~m(phone_dialed timestamp full_on_screen_result agent_name id),
-        config
+        ~m(id phone_dialed timestamp display_name caller_login system_id first_name last_name voter_id),
+        _config
       ) do
-    beginning =
-      case Sync.Info.fetch_voter_id(call) do
-        {:ok, ~m(system id first_name last_name)} -> [system, id, first_name, last_name]
-        {:error, ~m(message first_name last_name)} -> ["Unknown", message, first_name, last_name]
-      end
-
-    row =
-      Enum.concat(beginning, [
-        phone_dialed,
-        timestamp
-        |> Timex.Timezone.convert("America/New_York")
-        |> Timex.format!("{0M}-{0D}-{YYYY}"),
-        timestamp
-        |> Timex.Timezone.convert("America/New_York")
-        |> Timex.format!("{0h12}:{m} {AM} EST"),
-        config[full_on_screen_result]["display_name"] || full_on_screen_result,
-        agent_name,
-        call["caller_email"]
-      ])
+    row = [
+      system_id,
+      voter_id,
+      first_name,
+      last_name,
+      phone_dialed,
+      timestamp
+      |> Timex.Timezone.convert("America/New_York")
+      |> Timex.format!("{0M}-{0D}-{YYYY}"),
+      timestamp
+      |> Timex.Timezone.convert("America/New_York")
+      |> Timex.format!("{0h12}:{m} {AM} EST"),
+      display_name,
+      caller_login
+    ]
 
     {id, row}
   end
@@ -146,12 +141,12 @@ defmodule CallSync.Csv do
   end
 
   def aggregate(rows, config) do
-    zeros =
+    _zeros =
       Map.values(config)
       |> Enum.map(fn ~m(display_name) -> {display_name, 0} end)
       |> Enum.into(%{})
 
-    Enum.reduce(rows, %{}, fn [_a, _b, _c, _d, _e, _f, _g, h, _i, _j], acc ->
+    Enum.reduce(rows, %{}, fn [_a, _b, _c, _d, _e, _f, _g, h, _i], acc ->
       Map.update(acc, h, 1, &(&1 + 1))
     end)
     |> Map.drop(~w(Result))

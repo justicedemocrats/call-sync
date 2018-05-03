@@ -41,6 +41,15 @@ config :call_sync,
   ],
   archivedb_port: "${ARCHIVEDB_PORT}"
 
+config :call_sync,
+  productiondb_username: "${PRODUCTIONDB_USERNAME}",
+  productiondb_password: "${PRODUCTIONDB_PASSWORD}",
+  productiondb_seeds: [
+    "${PRODUCTIONDB_SEED_1}",
+    "${PRODUCTIONDB_SEED_2}"
+  ],
+  productiondb_port: "${PRODUCTIONDB_PORT}"
+
 config :rollbax,
   access_token: "${ROLLBAR_ACCESS_TOKEN}",
   environment: "production"

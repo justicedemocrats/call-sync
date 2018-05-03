@@ -2,40 +2,6 @@ defmodule CallSync.Info do
   import ShortMaps
   require Logger
 
-  @max_attempts 5
-  @sleep_period 2_000
-
-  def fetch_voter_id(phone_dialed) when is_binary(phone_dialed) do
-    fetch_voter_id(~m(phone_dialed))
-  end
-
-  def fetch_voter_id(~m(phone_dialed)) do
-    do_fetch_voter_id(phone_dialed, 1)
-  end
-
-  def do_fetch_voter_id(phone_dialed, attempt) do
-    try do
-      %{body: %{"findMatchingContactsDetails" => matches}} =
-        Livevox.Api.post(
-          "contact/v6.0/contacts/search",
-          body: %{"filter" => %{"phone" => phone_dialed}},
-          query: %{"count" => 100, "offset" => 0},
-          timeout: 20_000
-        )
-
-      process_matches(matches)
-    rescue
-      e ->
-        if attempt < @max_attempts do
-          Logger.info("Retrying – attempt #{attempt + 1}")
-          :timer.sleep(@sleep_period)
-          do_fetch_voter_id(phone_dialed, attempt + 1)
-        else
-          throw(e)
-        end
-    end
-  end
-
   @doc ~S"""
   Filters and extracts the voter file id from 0, 1, or many livevox results,
   attempting helpful error messages
@@ -73,19 +39,6 @@ defmodule CallSync.Info do
     end
   end
 
-  @doc ~S"""
-  Extracts the voter file id from the account number, attempting meaningful error
-  messages
-
-  ## Examples
-
-    iex> Jobs.Sync.extract_id(%{"account" => "ny14-van-1"})
-    {:ok, %{"district" => "ny14", "system" => "van", "id" => "1"}}
-
-    iex> Jobs.Sync.extract_id(%{"account" => "ny14-1"})
-    {:error, "failed to fetch voter id: bad account number format: ny14-1"}
-
-  """
   def extract_id(~m(account person)) do
     first_name = person["firstName"]
     last_name = person["lastName"]

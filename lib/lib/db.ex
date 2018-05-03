@@ -1,13 +1,10 @@
 defmodule Db do
+  import ShortMaps
   require Logger
-
-  def insert_one(collection, documents) do
-    Mongo.insert_one(:mongo, collection, documents, pool: DBConnection.Poolboy)
-  end
 
   def update(collection, match, operation) do
     Mongo.update_many!(
-      :mongo,
+      :syncdb,
       collection,
       match,
       operation,
@@ -19,7 +16,7 @@ defmodule Db do
 
   def find(collection, query, opts \\ []) do
     Mongo.find(
-      :mongo,
+      :syncdb,
       collection,
       query,
       Keyword.merge(opts, pool: DBConnection.Poolboy, timeout: 1_000_000)
@@ -27,14 +24,14 @@ defmodule Db do
   end
 
   def count(collection, query) do
-    Mongo.count(:mongo, collection, query, pool: DBConnection.Poolboy)
+    Mongo.count(:syncdb, collection, query, pool: DBConnection.Poolboy)
   end
 
-  def distinct_callers(service_names) when is_list(service_names) do
+  def distinct_callers(district) do
     query =
-      Sync.Info.within_24_hours()
-      |> Map.merge(%{"service_name" => %{"$in" => service_names}})
+      CallSync.Info.within_24_hours()
+      |> Map.merge(~m(district))
 
-    Mongo.distinct!(:mongo, "calls", "agent_name", query, pool: DBConnection.Poolboy)
+    Mongo.distinct!(:syncdb, "calls", "caller_login", query, pool: DBConnection.Poolboy)
   end
 end

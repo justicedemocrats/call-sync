@@ -30,7 +30,7 @@ defmodule CallSync.TermCodeConfig do
       end
 
     val = Map.drop(underscored, ["lv_result", "lv_system_result"])
-    {key, val}
+    {String.trim(key), val}
   end
 
   defp typey_downcase(val) when is_binary(val), do: String.downcase(val)

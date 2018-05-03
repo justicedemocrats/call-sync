@@ -12,7 +12,7 @@ defmodule CallSync.Batch do
   #   -> recurse!
   def sync_batch(
         slug,
-        service_names,
+        district,
         service_configuration,
         api_key,
         mode,
@@ -23,7 +23,7 @@ defmodule CallSync.Batch do
     Logger.info("Doing batch")
 
     batch_done =
-      fetch_sync_batch_for(service_names)
+      fetch_sync_batch_for(district)
       |> Enum.map(fn call -> task_sync_call(call, service_configuration, api_key, mode) end)
       |> Enum.map(fn t -> Task.await(t, 30_000) end)
 
@@ -33,20 +33,20 @@ defmodule CallSync.Batch do
     if length(batch_done) == 0 do
       %{"aggregated_results" => csv_aggregated_results, "file_url" => file_url} =
         case strategy do
-          "hybrid" -> upload_queued(slug, service_names, service_configuration)
+          "hybrid" -> upload_queued(slug, district, service_configuration)
           _ -> %{"aggregated_results" => nil, "file_url" => nil}
         end
 
       [aggregated_results, success_count, error_count] =
         [
-          Task.async(fn -> fetch_aggregated_results(service_names, service_configuration) end),
-          Task.async(fn -> get_success_count(service_names) end),
-          Task.async(fn -> get_error_count(service_names) end)
+          Task.async(fn -> fetch_aggregated_results(district, service_configuration) end),
+          Task.async(fn -> get_success_count(district) end),
+          Task.async(fn -> get_error_count(district) end)
         ]
         |> Enum.map(&Task.await(&1, 1_000_000))
 
-      total = Sync.Info.value_sum(aggregated_results)
-      csv_total = Sync.Info.value_sum(csv_aggregated_results)
+      total = CallSync.Info.value_sum(aggregated_results)
+      csv_total = CallSync.Info.value_sum(csv_aggregated_results)
 
       {slug, strategy, ~m(
           aggregated_results success_count error_count
@@ -55,7 +55,7 @@ defmodule CallSync.Batch do
     else
       sync_batch(
         slug,
-        service_names,
+        district,
         service_configuration,
         api_key,
         mode,
@@ -66,11 +66,11 @@ defmodule CallSync.Batch do
     end
   end
 
-  def fetch_sync_batch_for(service_names) do
+  def fetch_sync_batch_for(district) do
     query =
-      Sync.Info.within_24_hours()
+      CallSync.Info.within_24_hours()
       |> Map.merge(%{"sync_status" => %{"$exists" => false}})
-      |> Map.merge(%{"service_name" => %{"$in" => service_names}})
+      |> Map.merge(~m(district))
 
     [batch, {:ok, count}] =
       [
@@ -103,12 +103,11 @@ defmodule CallSync.Batch do
     |> write_result(call)
   end
 
-  def send_out(call, config, api_key, mode) do
+  def send_out(call = ~m(voter_id), config, api_key, mode) do
     mark_started(call)
 
     with {:ok, body} <- configure_body(call, config),
-         {:ok, ~m(id)} <- Sync.Info.fetch_voter_id(call),
-         {:ok, ~m(identifiers)} <- Van.record_canvass(id, body, api_key, mode) do
+         {:ok, ~m(identifiers)} <- Van.record_canvass(voter_id, body, api_key, mode) do
       sync_status = "finished"
       receipt = List.first(identifiers)
       synced_at = DateTime.utc_now()
@@ -193,17 +192,17 @@ defmodule CallSync.Batch do
     Db.update("calls", ~m(id), %{"$set" => result})
   end
 
-  def fetch_aggregated_results(service_names, config) do
-    zeros =
+  def fetch_aggregated_results(district, config) do
+    _zeros =
       Map.values(config)
       |> Enum.map(fn ~m(display_name) -> {display_name, 0} end)
       |> Enum.into(%{})
 
     Db.find(
       "calls",
-      Sync.Info.within_24_hours()
+      CallSync.Info.within_24_hours()
       |> Map.merge(%{"sync_status" => %{"$ne" => "ignored"}})
-      |> Map.merge(%{"service_name" => %{"$in" => service_names}})
+      |> Map.merge(~m(district))
     )
     |> Enum.reduce(%{}, fn ~m(full_on_screen_result), acc ->
       result = config[full_on_screen_result]["display_name"] || full_on_screen_result
@@ -214,24 +213,24 @@ defmodule CallSync.Batch do
     |> Enum.sort_by(fn {_key, val} -> val end)
   end
 
-  def get_success_count(service_names) do
+  def get_success_count(district) do
     {:ok, n} =
       Db.count(
         "calls",
-        Sync.Info.within_24_hours()
-        |> Map.merge(%{"service_name" => %{"$in" => service_names}})
+        CallSync.Info.within_24_hours()
+        |> Map.merge(~m(district))
         |> Map.merge(%{"sync_status" => "finished"})
       )
 
     n
   end
 
-  def get_error_count(service_names) do
+  def get_error_count(district) do
     {:ok, n} =
       Db.count(
         "calls",
-        Sync.Info.within_24_hours()
-        |> Map.merge(%{"service_name" => %{"$in" => service_names}})
+        CallSync.Info.within_24_hours()
+        |> Map.merge(~m(district))
         |> Map.merge(%{
           "$or" => [
             %{"sync_status" => "attempted_error"},
@@ -243,13 +242,13 @@ defmodule CallSync.Batch do
     n
   end
 
-  def upload_queued(slug, service_names, service_configuration) do
+  def upload_queued(slug, district, service_configuration) do
     Db.find(
       "calls",
-      Sync.Info.within_24_hours()
+      CallSync.Info.within_24_hours()
       |> Map.merge(%{"sync_status" => "queued_for_csv"})
-      |> Map.merge(%{"service_name" => %{"$in" => service_names}})
+      |> Map.merge(~m(district))
     )
-    |> Sync.Csv.result_stream_to_csv(slug, service_configuration, & &1)
+    |> CallSync.Csv.result_stream_to_csv(slug, service_configuration, & &1)
   end
 end

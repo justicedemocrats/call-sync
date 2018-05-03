@@ -9,39 +9,54 @@ defmodule CallSync do
       worker(CallSync.SyncConfig, []),
       worker(CallSync.TermCodeConfig, []),
       worker(Livevox.Session, []),
-      # worker(
-      #   Mongo,
-      #   [
-      #     [
-      #       name: :syncdb,
-      #       database: "call-sync",
-      #       username: Application.get_env(:call_sync, :syncdb_username),
-      #       password: Application.get_env(:call_sync, :syncdb_password),
-      #       seeds: Application.get_env(:call_sync, :syncdb_seeds),
-      #       port: Application.get_env(:call_sync, :syncdb_port),
-      #       pool: DBConnection.Poolboy
-      #     ]
-      #   ],
-      #   id: :syncdb
-      # ),
-      # worker(
-      #   Mongo,
-      #   [
-      #     [
-      #       name: :archivedb,
-      #       database: "livevox-archives",
-      #       username: Application.get_env(:call_sync, :archivedb_username),
-      #       password: Application.get_env(:call_sync, :archivedb_password),
-      #       seeds: Application.get_env(:call_sync, :archivedb_seeds),
-      #       port: Application.get_env(:call_sync, :archivedb_port),
-      #       pool: DBConnection.Poolboy
-      #     ]
-      #   ],
-      #   id: :archivedb
-      # ),
+      worker(
+        Mongo,
+        [
+          [
+            name: :syncdb,
+            database: "call_sync",
+            username: Application.get_env(:call_sync, :syncdb_username),
+            password: Application.get_env(:call_sync, :syncdb_password),
+            seeds: Application.get_env(:call_sync, :syncdb_seeds),
+            port: Application.get_env(:call_sync, :syncdb_port),
+            pool: DBConnection.Poolboy
+          ]
+        ],
+        id: :syncdb
+      ),
+      worker(
+        Mongo,
+        [
+          [
+            name: :archivedb,
+            database: "livevox-archives",
+            username: Application.get_env(:call_sync, :archivedb_username),
+            password: Application.get_env(:call_sync, :archivedb_password),
+            seeds: Application.get_env(:call_sync, :archivedb_seeds),
+            port: Application.get_env(:call_sync, :archivedb_port),
+            pool: DBConnection.Poolboy
+          ]
+        ],
+        id: :archivedb
+      ),
+      worker(
+        Mongo,
+        [
+          [
+            name: :productiondb,
+            database: "livevox",
+            username: Application.get_env(:call_sync, :productiondb_username),
+            password: Application.get_env(:call_sync, :productiondb_password),
+            seeds: Application.get_env(:call_sync, :productiondb_seeds),
+            port: Application.get_env(:call_sync, :productiondb_port),
+            pool: DBConnection.Poolboy
+          ]
+        ],
+        id: :productiondb
+      ),
       worker(CallSync.Scheduler, []),
       Honeydew.queue_spec(:queue),
-      Honeydew.worker_spec(:queue, Sync.Worker, num: 1)
+      Honeydew.worker_spec(:queue, CallSync.Worker, num: 1)
     ]
 
     opts = [strategy: :one_for_one, name: CallSync.Supervisor]

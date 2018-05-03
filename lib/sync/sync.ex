@@ -1,4 +1,4 @@
-defmodule Sync do
+defmodule CallSync.SyncManager do
   import ShortMaps
   require Logger
 
@@ -8,7 +8,7 @@ defmodule Sync do
     now = Timex.now("America/New_York")
     before = Timex.now() |> Timex.shift(minutes: -30)
 
-    CallSync.AirtableCache.get_all().listings
+    CallSync.SyncConfig.get_all().listings
     |> Enum.filter(fn {_slug, entry} -> entry["active"] == true end)
     |> Enum.filter(fn {_slug, config} -> is_queued(config, now, before) end)
     |> Enum.sort()
@@ -19,7 +19,7 @@ defmodule Sync do
   end
 
   def sync_all do
-    listings = CallSync.AirtableCache.get_all().listings
+    listings = CallSync.SyncConfig.get_all().listings
 
     listings
     |> Enum.filter(fn {_slug, entry} -> entry["active"] == true end)
