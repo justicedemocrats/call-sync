@@ -18,10 +18,12 @@ config :logger, :console,
   metadata: [:request_id]
 
 config :call_sync, CallSync.Scheduler,
+  timezone: "America/New_York",
   jobs: [
     {"*/9 * * * *", {CallSync.TermCodeConfig, :update, []}},
-    {"*/8 * * * *", {CallSync.SyncConfig, :update, []}}
-    # {"3 * * * * *", {Sync, :sync_current_iteration, []}}
+    {"*/8 * * * *", {CallSync.SyncConfig, :update, []}},
+    {"0 1  * * * *", {CallSync.SyncManager, :sync_all, []}},
+    {"0 5 * * * *", {Archive, :go, []}}
   ]
 
 # Import environment specific config. This must remain at the bottom

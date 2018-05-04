@@ -2,46 +2,36 @@ defmodule Archive do
   require Logger
   import ShortMaps
 
-  @archive_shift [days: -5]
+  @archive_shift [days: -0]
   @print_interval 100
   @chunk_size 100
 
-  def go(collection) do
-    _conn =
-      case Mongo.start_link(
-             name: :backupdb,
-             database: "livevox-archives",
-             username: Application.get_env(:call_sync, :backupdb_username),
-             password: Application.get_env(:call_sync, :backupdb_password),
-             seeds: Application.get_env(:call_sync, :backupdb_seeds),
-             port: Application.get_env(:call_sync, :backupdb_port)
-           ) do
-        {:ok, conn} -> conn
-        {:error, {:already_started, conn}} -> conn
-      end
+  @collection "calls"
 
+  def go do
     timestamp = %{"$lt" => Timex.now() |> Timex.shift(@archive_shift)}
 
-    {:ok, count} = Db.count(collection, ~m(timestamp))
+    {:ok, count} =
+      Mongo.count(:productiondb, @collection, ~m(timestamp), pool: DBConnection.Poolboy)
 
     Logger.info("Have #{count} to archive")
 
-    Db.find(collection, ~m(timestamp))
+    Mongo.find(:productiondb, @collection, ~m(timestamp), pool: DBConnection.Poolboy)
     |> Stream.chunk_every(@chunk_size)
     |> Stream.with_index()
-    |> Stream.each(&archive(&1, collection))
+    |> Stream.each(&archive/1)
     |> Stream.run()
   end
 
-  def archive({calls_chunk, idx}, collection) do
+  def archive({calls_chunk, idx}) do
     ids = Enum.map(calls_chunk, & &1["_id"])
 
-    Mongo.insert_many(:backupdb, collection, calls_chunk)
+    Mongo.insert_many(:archivedb, @collection, calls_chunk, pool: DBConnection.Poolboy)
 
     {:ok, _} =
       Mongo.delete_many(
-        :mongo,
-        collection,
+        :productiondb,
+        @collection,
         %{"_id" => %{"$in" => ids}},
         pool: DBConnection.Poolboy
       )
