@@ -22,7 +22,7 @@ config :call_sync, CallSync.Scheduler,
   jobs: [
     {"*/9 * * * *", {CallSync.TermCodeConfig, :update, []}},
     {"*/8 * * * *", {CallSync.SyncConfig, :update, []}},
-    {"0 1  * * * *", {CallSync.SyncManager, :sync_all, []}},
+    {"0 1 * * * *", {CallSync.SyncManager, :sync_all, []}},
     {"0 5 * * * *", {Archive, :go, []}}
   ]
 
