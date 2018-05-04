@@ -41,7 +41,10 @@ defmodule CallSync.LoaderWorker do
       |> IO.inspect()
     rescue
       _ ->
-        HTTPotion.post(upload_failed_hook())
+        HTTPotion.post(
+          upload_failed_hook(),
+          body: Poison.encode!(%{"error" => "oh yeah, it errored"})
+        )
         |> IO.inspect()
     end
   end

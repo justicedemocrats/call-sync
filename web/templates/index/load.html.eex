@@ -5,6 +5,8 @@
     <fieldset>
       <legend> Upload a Sync Export CDR </legend>
 
+      <p> <strong> Only </strong> the <strong> Sync Export </strong> CDR is valid here.
+
       <p> This uploaded is <em> idempotent </em> (denoting an element of a set that is unchanged in
         value when multiplied or otherwise operated on by itself.). This means you do <strong> not </strong>
         need to worry about uploading duplicate results. </p>
