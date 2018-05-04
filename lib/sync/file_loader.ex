@@ -9,7 +9,7 @@ defmodule CallSync.FileLoader do
     File.stream!(path)
     |> CSV.parse_stream()
     |> Stream.with_index()
-    |> Stream.filter(skip(46000))
+    # |> Stream.filter(skip(46000))
     |> Flow.from_enumerable(min_demand: 5, max_demand: 10, stages: 20)
     |> Flow.map(&update_progress/1)
     |> Flow.map(&line_to_map/1)
