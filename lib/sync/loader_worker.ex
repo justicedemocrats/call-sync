@@ -6,7 +6,7 @@ defmodule CallSync.LoaderWorker do
 
   @report_interval 100
   @progress_interval 5
-  @batch_size 50
+  @batch_size 10
 
   def upload_complete_hook, do: Application.get_env(:call_sync, :upload_complete_hook)
   def upload_failed_hook, do: Application.get_env(:call_sync, :upload_failed_hook)
