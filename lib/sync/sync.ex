@@ -50,6 +50,6 @@ defmodule CallSync.SyncManager do
   end
 
   def queue_candidate(slug) do
-    Honeydew.async({:sync_candidate, [slug]}, :queue)
+    Honeydew.async({:sync_candidate, [slug]}, :sync_queue)
   end
 end

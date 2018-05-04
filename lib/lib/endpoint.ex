@@ -26,7 +26,11 @@ defmodule CallSync.Endpoint do
 
   plug(
     Plug.Parsers,
-    parsers: [:urlencoded, :multipart, :json],
+    parsers: [
+      # Increase to 20MB max upload
+      {:multipart, length: 20_000_000},
+      :json
+    ],
     pass: ["*/*"],
     json_decoder: Poison
   )

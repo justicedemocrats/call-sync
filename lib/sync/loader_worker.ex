@@ -1,39 +1,68 @@
-defmodule CallSync.FileLoader do
+defmodule CallSync.LoaderWorker do
   alias NimbleCSV.RFC4180, as: CSV
   require Logger
   import ShortMaps
+  use Honeydew.Progress
 
-  @report_interval 1000
+  @report_interval 100
+  @progress_interval 5
+  @batch_size 50
 
-  def load(path) do
-    File.stream!(path)
-    |> CSV.parse_stream()
-    |> Stream.with_index()
-    # |> Stream.filter(skip(12000))
-    |> Flow.from_enumerable(min_demand: 5, max_demand: 10, stages: 20)
-    |> Flow.map(&update_progress/1)
-    |> Flow.map(&line_to_map/1)
-    |> Flow.reject(&should_skip/1)
-    |> Flow.map(&resolve_term_code/1)
-    # |> Stream.map(&add_service_info/1)
-    |> Flow.map(&add_display_names/1)
-    |> Flow.map(&upsert/1)
-    |> Flow.run()
+  def upload_complete_hook, do: Application.get_env(:call_sync, :upload_complete_hook)
+  def upload_failed_hook, do: Application.get_env(:call_sync, :upload_failed_hook)
+
+  def load(~m(path)) do
+    load(path)
   end
 
-  def skip(n) do
-    fn {_, idx} ->
-      if rem(idx, @report_interval) == 0 do
-        Logger.info("Did #{idx}")
-      end
+  def load(path) do
+    try do
+      listings = CallSync.SyncConfig.get_all().listings
 
-      idx > n
+      processed =
+        File.stream!(path)
+        |> CSV.parse_stream()
+        |> Stream.chunk_every(@batch_size)
+        |> Stream.with_index()
+        |> Stream.map(&update_progress/1)
+        |> Stream.map(fn batch ->
+          batch
+          |> Enum.map(&line_to_map/1)
+          |> Enum.reject(&should_skip/1)
+          |> Enum.map(&resolve_term_code/1)
+          # |> Enum.map(&add_service_info/1)
+          |> Enum.map(fn call -> add_display_names(call, listings) end)
+          |> Enum.map(&task_upsert/1)
+          |> Enum.map(&Task.await/1)
+        end)
+        |> Stream.run()
+
+      HTTPotion.post(upload_complete_hook(), body: Poison.encode!(~m(processed)))
+      |> IO.inspect()
+    rescue
+      _ ->
+        HTTPotion.post(upload_failed_hook())
+        |> IO.inspect()
     end
   end
 
+  # def skip(n) do
+  #   fn {_, idx} ->
+  #     if rem(idx, @report_interval) == 0 do
+  #       Logger.info("Did #{idx * @batch_size}")
+  #     end
+
+  #     idx > n
+  #   end
+  # end
+
   def update_progress({line, idx}) do
     if rem(idx, @report_interval) == 0 do
-      Logger.info("Did #{idx}")
+      Logger.info("Did #{idx * @batch_size}")
+    end
+
+    if rem(idx, @progress_interval) == 0 do
+      progress(idx * @batch_size)
     end
 
     line
@@ -149,8 +178,8 @@ defmodule CallSync.FileLoader do
     call
   end
 
-  def add_display_names(call = ~m(full_on_screen_result district)) do
-    client = infer_campaign(CallSync.SyncConfig.get_all().listings, district)
+  def add_display_names(call = ~m(full_on_screen_result district), listings) do
+    client = infer_campaign(listings, district)
     fosr = String.trim(full_on_screen_result)
 
     case CallSync.SyncConfig.get_all().configurations[client][fosr] do
@@ -169,6 +198,10 @@ defmodule CallSync.FileLoader do
     |> Enum.filter(fn {_slug, ~m(district_abbreviation)} -> district_abbreviation == district end)
     |> Enum.map(fn {slug, _} -> slug end)
     |> List.first()
+  end
+
+  def task_upsert(call) do
+    Task.async(fn -> upsert(call) end)
   end
 
   def upsert(call = ~m(id)) do

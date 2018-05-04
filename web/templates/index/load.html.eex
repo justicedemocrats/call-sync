@@ -1,0 +1,57 @@
+<link rel="stylesheet" href="https://cdn.shoelace.style/1.0.0-beta24/shoelace.css">
+<div style="padding: 15%;">
+  <form action="/load?secret=<%= @secret %>" method="post" enctype="multipart/form-data">
+
+    <fieldset>
+      <legend> Upload a Sync Export CDR </legend>
+
+      <p> This uploaded is <em> idempotent </em> (denoting an element of a set that is unchanged in
+        value when multiplied or otherwise operated on by itself.). This means you do <strong> not </strong>
+        need to worry about uploading duplicate results. </p>
+
+      <p> A Zap should file on success and failure of a job, but the sure way to know it's all worked is
+        checking the "New Syncing Database" in Metabase. </p>
+
+      <p class="input-hint"> Note: the upload limit is 20MB. If your file is bigger than that, please break it into chunks. </p>
+      <div class="input-field">
+        <%= file_input :upload, :file, [required: true, accept: ".csv", id: "file-upload"] %>
+      </div>
+
+      <input type="hidden" value="<%= csrf_token() %>" name="_csrf_token">
+
+      <div class="input-field">
+        <button class="button" type="submit">
+          Submit
+        </button>
+      </div>
+    </fieldset>
+  </form>
+
+  <fieldset>
+    <legend> Current Jobs </legend>
+    <%= if length(@queued) == 0 do %>
+      <h3> No jobs queued right now. </h3>
+    <% else %>
+      <h6> Refresh to see progress updates. </h6>
+      <table>
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>File Name</th>
+          <th>Lines Processed</th>
+          <th>Sending Results To</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%= for job <- @queued do %>
+          <tr>
+            <td> <%= job.status.status %> </td>
+            <td> <%= job.task["filename"] %> </td>
+            <td> <%= job.status.progress %> </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <% end %>
+  </fieldset>
+</div>

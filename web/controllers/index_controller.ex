@@ -3,6 +3,8 @@ defmodule CallSync.IndexController do
   alias CallSync.{SyncConfig}
   use CallSync.Web, :controller
 
+  plug(:put_layout, false)
+
   def index(conn, _) do
     text(conn, ~s(
       ENDPOINTS:
@@ -16,7 +18,7 @@ defmodule CallSync.IndexController do
 
   def status(conn, _) do
     queued_text =
-      get_queue()
+      get_sync_queue()
       |> Enum.map(fn job ->
         ~s[
           #{job.task} -> #{job.status.status} (#{job.status.progress} processed)]
@@ -203,11 +205,12 @@ defmodule CallSync.IndexController do
     text(conn, "Queued a sync of results from #{ago} to #{up_to}")
   end
 
-  def get_queue do
-    {{waiting, up_next}, _running} = Honeydew.state(:queue) |> List.first() |> Map.get(:private)
+  def get_sync_queue do
+    {{waiting, up_next}, _running} =
+      Honeydew.state(:sync_queue) |> List.first() |> Map.get(:private)
 
     running =
-      Honeydew.status(:queue)
+      Honeydew.status(:sync_queue)
       |> Map.get(:workers)
       |> Map.values()
       |> Enum.filter(&(&1 != nil))
@@ -323,5 +326,43 @@ defmodule CallSync.IndexController do
 
   def extract_service_query(_) do
     {:ok, %{}}
+  end
+
+  def get_load(conn, _) do
+    queued = get_load_queue()
+    render(conn, "load.html", secret: conn.assigns.secret, queued: queued)
+  end
+
+  def post_load(conn, ~m(upload)) do
+    ~m(path filename)a = upload["file"]
+    File.mkdir_p("./input-files")
+    new_path = "./input-files/filename-#{DateTime.utc_now() |> DateTime.to_unix()}"
+    File.rename(path, new_path)
+    path = new_path
+    Honeydew.async({:load, [~m(path filename)]}, :load_queue)
+    redirect(conn, to: "/load?secret=#{conn.assigns.secret}")
+  end
+
+  def get_load_queue do
+    {{waiting, up_next}, _running} =
+      Honeydew.state(:load_queue) |> List.first() |> Map.get(:private)
+
+    running =
+      Honeydew.status(:load_queue)
+      |> Map.get(:workers)
+      |> Map.values()
+      |> Enum.filter(&(&1 != nil))
+      |> Enum.map(fn worker ->
+        {task, status} = worker
+        %{task: extract_task(task), status: extract_status(status)}
+      end)
+
+    Enum.concat(
+      running,
+      Enum.concat(waiting, up_next)
+      |> Enum.map(fn job ->
+        %{task: extract_task(job), status: %{status: "waiting", progress: 0}}
+      end)
+    )
   end
 end

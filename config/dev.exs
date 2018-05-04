@@ -76,4 +76,6 @@ config :call_sync,
   report_error_url: System.get_env("REPORT_FAILURE_URL"),
   zapier_hook_url: System.get_env("ZAPIER_HOOK_URL"),
   second_zapier_hook_url: System.get_env("SECOND_ZAPIER_HOOK_URL"),
-  login_management_url: System.get_env("LOGIN_MANAGEMENT_URL")
+  login_management_url: System.get_env("LOGIN_MANAGEMENT_URL"),
+  upload_complete_hook: System.get_env("UPLOAD_COMPLETE_HOOK"),
+  upload_failed_hook: System.get_env("UPLOAD_FAILED_HOOK")

@@ -1,4 +1,4 @@
-defmodule CallSync.Worker do
+defmodule CallSync.SyncWorker do
   use Honeydew.Progress
   import ShortMaps
   require Logger
@@ -7,19 +7,18 @@ defmodule CallSync.Worker do
   def report_error_url, do: Application.get_env(:call_sync, :report_error_url)
 
   def sync_candidate(slug) do
-    # try do
-    do_sync_candidate(slug)
+    try do
+      do_sync_candidate(slug)
 
-    HTTPotion.post(
-      report_success_url() |> IO.inspect(),
-      body: Poison.encode!(%{"timestamp" => DateTime.utc_now(), "slug" => slug})
-    )
-
-    # rescue
-    #   error ->
-    #     timestamp = DateTime.utc_now()
-    #     HTTPotion.post(report_error_url(), body: Poison.encode!(~m(error timestamp slug)))
-    # end
+      HTTPotion.post(
+        report_success_url() |> IO.inspect(),
+        body: Poison.encode!(%{"timestamp" => DateTime.utc_now(), "slug" => slug})
+      )
+    rescue
+      error ->
+        timestamp = DateTime.utc_now()
+        HTTPotion.post(report_error_url(), body: Poison.encode!(~m(error timestamp slug)))
+    end
   end
 
   def do_sync_candidate(slug) do

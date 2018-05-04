@@ -4,8 +4,11 @@ defmodule CallSync.Bulk do
   def sync_bulk(slug, district, config, progress_fn) do
     bulk_results_stream = stream_all_unsynced(district)
 
+    IO.inspect(config)
+
     ~m(file_url aggregated_results) =
       CallSync.Csv.result_stream_to_csv(bulk_results_stream, slug, config, progress_fn)
+      |> IO.inspect()
 
     total = CallSync.Info.value_sum(aggregated_results)
     {slug, "all csv", ~m(file_url aggregated_results total)}

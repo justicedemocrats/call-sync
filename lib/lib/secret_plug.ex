@@ -7,7 +7,7 @@ defmodule CallSync.SecretPlug do
 
   def call(conn = %Plug.Conn{params: %{"secret" => input_secret}}, _) do
     if input_secret == secret() do
-      conn
+      assign(conn, :secret, secret())
     else
       send_resp(conn, 200, "wrong secret. contact ben")
     end

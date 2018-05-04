@@ -55,8 +55,10 @@ defmodule CallSync do
         id: :productiondb
       ),
       worker(CallSync.Scheduler, []),
-      Honeydew.queue_spec(:queue),
-      Honeydew.worker_spec(:queue, CallSync.Worker, num: 1)
+      Honeydew.queue_spec(:sync_queue),
+      Honeydew.worker_spec(:sync_queue, CallSync.SyncWorker, num: 1),
+      Honeydew.queue_spec(:load_queue),
+      Honeydew.worker_spec(:load_queue, CallSync.LoaderWorker, num: 1)
     ]
 
     opts = [strategy: :one_for_one, name: CallSync.Supervisor]
