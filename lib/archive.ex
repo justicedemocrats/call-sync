@@ -36,7 +36,7 @@ defmodule Archive do
   def archive({calls_chunk, idx}, collection) do
     ids = Enum.map(calls_chunk, & &1["_id"])
 
-    {:ok, _} = Mongo.insert_many(:backupdb, collection, calls_chunk)
+    Mongo.insert_many(:backupdb, collection, calls_chunk)
 
     {:ok, _} =
       Mongo.delete_many(

@@ -114,7 +114,11 @@ defmodule CallSync.SyncConfig do
       result_code = fields["Canvass Result Code"]
       should_sync = fields["Sync to System"]
       csv_only = fields["Include in CSV"]
-      display_name = fields["Display Name"]
+
+      display_name =
+        if is_binary(fields["Display Name"]),
+          do: String.trim(fields["Display Name"]),
+          else: fields["Display Name"]
 
       tags =
         case fields["Tags"] do

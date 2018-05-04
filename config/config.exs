@@ -19,7 +19,8 @@ config :logger, :console,
 
 config :call_sync, CallSync.Scheduler,
   jobs: [
-    # {"*/8 * * * *", {CallSync.AirtableCache, :update, []}}
+    {"*/9 * * * *", {CallSync.TermCodeConfig, :update, []}},
+    {"*/8 * * * *", {CallSync.SyncConfig, :update, []}}
     # {"3 * * * * *", {Sync, :sync_current_iteration, []}}
   ]
 

@@ -17,26 +17,23 @@ defmodule Livevox.Session do
     )
   end
 
-  def new_session do
-    session = create_session()
-    Agent.update(__MODULE__, fn _state -> session end)
-  end
-
   def session_id do
-    case Agent.get(__MODULE__, fn session -> session end) do
-      %Livevox.Session{id: id, expires_at: expires_at} ->
+    Agent.get_and_update(__MODULE__, fn
+      sesh = %Livevox.Session{id: id, expires_at: expires_at} ->
         if Timex.before?(expires_at, Timex.now()) do
-          new_session()
-          session_id()
+          # if expired, renew it
+          new = %{id: new_id} = create_session()
+          {new_id, new}
         else
-          id
+          # if not expired, return it and update its expiration
+          new = %Livevox.Session{id: id, expires_at: Timex.now() |> Timex.shift(hours: 2)}
+          {id, new}
         end
 
       nil ->
-        IO.puts("Initiating session")
-        new_session()
-        session_id()
-    end
+        new = %{id: new_id} = create_session()
+        {new_id, new}
+    end)
   end
 
   defp create_session do
@@ -47,6 +44,6 @@ defmodule Livevox.Session do
         body: %{userName: username, password: password, clientName: clientname}
       )
 
-    %Livevox.Session{id: sessionId, expires_at: Timex.now() |> Timex.shift(hours: 24)}
+    %Livevox.Session{id: sessionId, expires_at: Timex.now() |> Timex.shift(hours: 2)}
   end
 end

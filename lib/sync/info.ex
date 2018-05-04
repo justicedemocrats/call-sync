@@ -48,15 +48,23 @@ defmodule CallSync.Info do
         {:ok, ~m(district system id first_name last_name)}
 
       _ ->
-        message = "failed to fetch voter id: bad account number format: #{account}"
-        {:error, ~m(message first_name last_name)}
+        case account do
+          "ca25-pdi" <> id ->
+            district = "ca25"
+            system = "pdi"
+            {:ok, ~m(district system id first_name last_name)}
+
+          _ ->
+            message = "failed to fetch voter id: bad account number format: #{account}"
+            {:error, ~m(message first_name last_name)}
+        end
     end
   end
 
   def within_24_hours do
-    # ago = Timex.shift(Timex.now(), hours: -48)
-    up_to = Timex.shift(Timex.now(), hours: -0)
+    # ago = Timex.shift(Timex.now(), hours: -12)
     ago = Timex.shift(Timex.now(), hours: -24)
+    up_to = Timex.shift(Timex.now(), hours: -0)
     %{"timestamp" => %{"$gt" => ago, "$lt" => up_to}}
   end
 
