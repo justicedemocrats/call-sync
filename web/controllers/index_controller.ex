@@ -244,17 +244,17 @@ defmodule CallSync.IndexController do
 
   def drop_rate(conn, params) do
     with {:ok, time_query} <- extract_time_query(params),
-         {:ok, service_query} <- extract_service_query(params) do
+         {:ok, district_query} <- extract_district_query(params) do
       result =
         try do
-          do_calc_drop_rate(time_query, service_query)
+          do_calc_drop_rate(time_query, district_query)
         rescue
           _ ->
             try do
-              do_calc_drop_rate(time_query, service_query)
+              do_calc_drop_rate(time_query, district_query)
             rescue
               _ ->
-                do_calc_drop_rate(time_query, service_query)
+                do_calc_drop_rate(time_query, district_query)
             end
         end
 
@@ -264,8 +264,8 @@ defmodule CallSync.IndexController do
     end
   end
 
-  def do_calc_drop_rate(time_query, service_query) do
-    base_query = Map.merge(time_query, service_query)
+  def do_calc_drop_rate(time_query, district_query) do
+    base_query = Map.merge(time_query, district_query)
     contact_query = Map.merge(%{"contact" => true}, base_query)
     dropped_query = Map.merge(%{"dropped" => true}, base_query)
 
@@ -281,7 +281,7 @@ defmodule CallSync.IndexController do
       Mongo.count!(
         :syncdb,
         "calls",
-        contact_query,
+        dropped_query,
         full_opts
       )
     ]
@@ -319,12 +319,11 @@ defmodule CallSync.IndexController do
     {:error, "Bad request - proper usage is /drop-rate?start_day=02-18&count=7"}
   end
 
-  def extract_service_query(~m(service_name)) do
-    service_name = String.downcase(service_name)
-    {:ok, %{"service_name" => %{"$regex" => ".*#{service_name}.*", "$options" => "i"}}}
+  def extract_district_query(~m(district)) do
+    {:ok, ~m(district)}
   end
 
-  def extract_service_query(_) do
+  def extract_district_query(_) do
     {:ok, %{}}
   end
 

@@ -65,7 +65,7 @@ defmodule CallSync.LoaderWorker do
     end
 
     if rem(idx, @progress_interval) == 0 do
-      progress(idx * @batch_size)
+      # progress(idx * @batch_size)
     end
 
     line
