@@ -17,7 +17,7 @@ defmodule CallSync.LoaderWorker do
 
   def load(path) do
     try do
-      listings = CallSync.SyncConfig.get_all().listings
+      ~m(listings configurations)a = CallSync.SyncConfig.get_all()
 
       processed =
         File.stream!(path)
@@ -31,7 +31,7 @@ defmodule CallSync.LoaderWorker do
           |> Enum.reject(&should_skip/1)
           |> Enum.map(&resolve_term_code/1)
           # |> Enum.map(&add_service_info/1)
-          |> Enum.map(fn call -> add_display_names(call, listings) end)
+          |> Enum.map(fn call -> add_display_names(call, listings, configurations) end)
           |> Enum.map(&task_upsert/1)
           |> Enum.map(&Task.await/1)
         end)
@@ -181,11 +181,11 @@ defmodule CallSync.LoaderWorker do
     call
   end
 
-  def add_display_names(call = ~m(full_on_screen_result district), listings) do
+  def add_display_names(call = ~m(full_on_screen_result district), listings, configurations) do
     client = infer_campaign(listings, district)
     fosr = String.trim(full_on_screen_result)
 
-    case CallSync.SyncConfig.get_all().configurations[client][fosr] do
+    case configurations[client][fosr] do
       nil ->
         IO.inspect(call)
 
