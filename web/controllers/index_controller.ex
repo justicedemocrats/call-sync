@@ -244,7 +244,7 @@ defmodule CallSync.IndexController do
 
   def drop_rate(conn, params) do
     with {:ok, time_query} <- extract_time_query(params),
-         {:ok, district_query} <- extract_district_query(params) do
+         {:ok, district_query} <- extract_service_query(params) do
       result =
         try do
           do_calc_drop_rate(time_query, district_query)
@@ -319,11 +319,12 @@ defmodule CallSync.IndexController do
     {:error, "Bad request - proper usage is /drop-rate?start_day=02-18&count=7"}
   end
 
-  def extract_district_query(~m(district)) do
-    {:ok, ~m(district)}
+  def extract_service_query(~m(service_name)) do
+    service_name = String.downcase(service_name)
+    {:ok, %{"service_name" => %{"$regex" => ".*#{service_name}.*", "$options" => "i"}}}
   end
 
-  def extract_district_query(_) do
+  def extract_service_query(_) do
     {:ok, %{}}
   end
 

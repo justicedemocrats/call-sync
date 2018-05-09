@@ -39,6 +39,8 @@ defmodule CallSync.LoaderWorker do
 
       HTTPotion.post(upload_complete_hook(), body: Poison.encode!(~m(processed)))
       |> IO.inspect()
+
+      CallSync.DataManager.add_service_names()
     rescue
       _ ->
         HTTPotion.post(
