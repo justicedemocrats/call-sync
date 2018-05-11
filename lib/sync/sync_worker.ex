@@ -8,7 +8,9 @@ defmodule CallSync.SyncWorker do
 
   def sync_candidate(slug) do
     try do
-      do_sync_candidate(slug)
+      contents = do_sync_candidate(slug)
+
+      CallSync.Reporting.record_report(%{"client" => slug, "contents" => contents})
 
       HTTPotion.post(
         report_success_url() |> IO.inspect(),
@@ -60,9 +62,8 @@ defmodule CallSync.SyncWorker do
     # TODO
     rows = CallSync.AgentData.from(district_abbreviation)
     {agent_file_url, agent_count} = CallSync.AgentData.upload_file(slug, rows)
-
-    Notifier.send(slug, strategy, Map.merge(data, ~m(agent_file_url agent_count)))
-
+    contents = Notifier.send(slug, strategy, Map.merge(data, ~m(agent_file_url agent_count)))
     Logger.info("Done!")
+    contents
   end
 end

@@ -25,6 +25,8 @@ defmodule Notifier do
     Logger.info("Sending webhook to #{zap_url()} for report for #{slug} to #{report_to}")
     HTTPotion.post(zap_url(), body: Poison.encode!(~m(text report_to subject)))
     HTTPotion.post(second_zap_url(), body: Poison.encode!(combine_results(data)))
+
+    {:ok, text}
   end
 
   def format_text(
