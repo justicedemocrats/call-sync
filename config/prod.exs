@@ -84,4 +84,6 @@ config :call_sync,
   second_zapier_hook_url: "${SECOND_ZAPIER_HOOK_URL}",
   login_management_url: "${LOGIN_MANAGEMENT_URL}",
   upload_complete_hook: "${UPLOAD_COMPLETE_HOOK}",
-  upload_failed_hook: "${UPLOAD_FAILED_HOOK}"
+  upload_failed_hook: "${UPLOAD_FAILED_HOOK}",
+  on_successful_report_fleet: "${ON_SUCCESSFUL_REPORT_FLEET}",
+  on_failed_report_fleet: "${ON_FAILED_REPORT_FLEET}"

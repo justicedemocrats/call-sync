@@ -23,7 +23,8 @@ config :call_sync, CallSync.Scheduler,
     {"*/9 * * * *", {CallSync.TermCodeConfig, :update, []}},
     {"*/8 * * * *", {CallSync.SyncConfig, :update, []}},
     {"3 * * * * *", {CallSync.SyncManager, :sync_current_iteration, []}},
-    {"0 5 * * * *", {Archive, :go, []}}
+    {"0 5 * * * *", {Archive, :go, []}},
+    {"0 8 * * * *", {CallSync.Reporting, :panick_if_missing_reports, []}}
   ]
 
 # Import environment specific config. This must remain at the bottom
