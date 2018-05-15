@@ -128,6 +128,9 @@ defmodule CallSync.LoaderWorker do
 
       ["TEST123" <> _] ->
         :skip
+
+      ["123457"] ->
+        :skip
     end
   end
 
