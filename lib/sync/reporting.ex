@@ -2,8 +2,6 @@ defmodule CallSync.Reporting do
   import ShortMaps
 
   @reporting_interval [hours: -12]
-  @on_successful_report_fleet Application.get_env(:call_sync, :on_successful_report_fleet)
-  @on_failed_report_fleet Application.get_env(:call_sync, :on_failed_report_fleet)
 
   def record_report(~m(client contents)) do
     created_at = Timex.now()
@@ -55,10 +53,16 @@ defmodule CallSync.Reporting do
   def panick_if_missing_reports do
     case all_good?() do
       {:ok, sent} ->
-        HTTPotion.post(@on_successful_report_fleet, body: Poison.encode!(~m(sent)))
+        HTTPotion.post(
+          Application.get_env(:call_sync, :on_successful_report_fleet),
+          body: Poison.encode!(~m(sent))
+        )
 
       {:error, missing} ->
-        HTTPotion.post(@on_failed_report_fleet, body: Poison.encode!(~m(missing)))
+        HTTPotion.post(
+          Application.get_env(:call_sync, :on_failed_report_fleet),
+          body: Poison.encode!(~m(missing))
+        )
     end
   end
 end
