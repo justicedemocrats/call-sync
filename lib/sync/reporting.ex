@@ -57,10 +57,8 @@ defmodule CallSync.Reporting do
       {:ok, sent} ->
         HTTPotion.post(@on_successful_report_fleet, body: Poison.encode!(~m(sent)))
 
-      # {:error, missing} ->
-      {:error, sent} ->
-        HTTPotion.post(@on_successful_report_fleet, body: Poison.encode!(~m(sent)))
-        # HTTPotion.post(@on_failed_report_fleet, body: Poison.encode!(~m(missing)))
+      {:error, missing} ->
+        HTTPotion.post(@on_failed_report_fleet, body: Poison.encode!(~m(missing)))
     end
   end
 end
