@@ -54,8 +54,8 @@ defmodule CallSync.Csv do
   # --------------------- --------------------- ---------------------
   def header_row do
     [
-      "Voter File",
       "Voter ID",
+      "Voter ID Type",
       "Voter First Name",
       "Voter Last Name",
       "Voter Phone",
@@ -80,8 +80,8 @@ defmodule CallSync.Csv do
         _config
       ) do
     row = [
-      system_id,
       voter_id,
+      system_id,
       first_name,
       last_name,
       phone_dialed,
